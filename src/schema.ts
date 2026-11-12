@@ -49,10 +49,7 @@ export const inventorySchema = z
         }),
       )
       .max(10000),
-    locations: z
-      .array(z.object({ id, name: id, branch: id }))
-      .min(1)
-      .max(1000),
+    locations: z.array(z.object({ id, name: id, branch: id })).max(1000),
     handovers: z
       .array(
         z.object({
@@ -168,7 +165,6 @@ export const inventorySchema = z
           role: z.enum(["IT Admin", "IT Officer"]),
         }),
       )
-      .min(1)
       .max(100),
     settings: z.object({
       organisation: id,

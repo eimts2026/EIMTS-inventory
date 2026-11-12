@@ -6,11 +6,9 @@ import {
   DatabaseBackup,
   FolderOpen,
   Plus,
-  RotateCcw,
   ShieldCheck,
 } from "lucide-react";
 import { useInventory } from "../store";
-import { createSeed } from "../seed";
 import { inventorySchema } from "../schema";
 import type { InventoryState, Member } from "../model";
 import { today, uid } from "../model";
@@ -31,8 +29,6 @@ export function Settings() {
   const [prefix, setPrefix] = useState(state.settings.paperPrefix);
   const [member, setMember] = useState<Member | null>(null);
   const [restoring, setRestoring] = useState<InventoryState | null>(null);
-  const [resetting, setResetting] = useState(false);
-  const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
   function save(event: FormEvent) {
     event.preventDefault();
@@ -170,7 +166,7 @@ export function Settings() {
         <div className="info-note inset">
           <ShieldCheck size={20} />
           <span>
-            This frontend uses sample accounts. IT login, authenticator MFA,
+            IT account drafts are saved locally. IT login, authenticator MFA,
             account disabling, and enforced permissions will connect with the
             backend.
           </span>
@@ -210,7 +206,7 @@ export function Settings() {
       >
         <div className="settings-copy">
           <p>
-            Download a complete JSON snapshot of the sample workspace. CSV
+            Download a complete JSON snapshot of this browser workspace. CSV
             reports are available for individual modules.
           </p>
           <div className="row-actions wrap">
@@ -239,16 +235,6 @@ export function Settings() {
                 }}
               />
             </label>
-            <button
-              className="button secondary"
-              onClick={() => {
-                setResetting(true);
-                setConfirmation("");
-              }}
-            >
-              <RotateCcw size={16} />
-              Reset sample data
-            </button>
           </div>
           <p className="field-note">
             Scheduled encrypted database backups and restore verification belong
@@ -341,43 +327,6 @@ export function Settings() {
               Restore backup
             </button>
           </div>
-        </Modal>
-      )}
-      {resetting && (
-        <Modal
-          title="Reset the sample workspace?"
-          onClose={() => setResetting(false)}
-        >
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (confirmation !== "RESET") return;
-              replace(createSeed());
-              setResetting(false);
-              notify("Sample workspace reset");
-            }}
-          >
-            <div className="modal-body">
-              <p>
-                This replaces your local preview changes with the original
-                sample records. Export a preview backup first if you want to
-                keep your changes.
-              </p>
-              <Field label="Type RESET to confirm">
-                <input
-                  required
-                  pattern="RESET"
-                  value={confirmation}
-                  onChange={(event) => setConfirmation(event.target.value)}
-                />
-              </Field>
-            </div>
-            <FormActions
-              onClose={() => setResetting(false)}
-              label="Reset sample data"
-              disabled={confirmation !== "RESET"}
-            />
-          </form>
         </Modal>
       )}
     </>

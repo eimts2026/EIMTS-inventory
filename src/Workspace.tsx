@@ -22,7 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useInventory } from "./store";
-import { dateLabel, verificationDue } from "./model";
+import { verificationDue } from "./model";
 import { AssetDialogs } from "./components/AssetDialogs";
 import type { AssetDialog } from "./components/AssetDialogs";
 import { Modal } from "./components/ui";
@@ -349,7 +349,7 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
               <i />
               Frontend preview
               <span className="preview-detail">
-                Sample records saved in this browser
+                Records saved in this browser
               </span>
             </span>
             <button onClick={() => setHelp(true)}>
@@ -399,8 +399,8 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
         <Modal title="Your frontend workspace" onClose={() => setHelp(false)}>
           <div className="modal-body">
             <p>
-              Explore the full inventory workflow using fictional assets,
-              people, and branches. Changes are saved on this device.
+              This workspace starts empty. Add branches, locations, and people
+              before registering assets. Changes are saved on this device.
             </p>
             <div className="help-steps">
               <p>
@@ -431,10 +431,6 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
               Paper forms are tracked by reference number and filing location.
               Vercel is the intended deployment target.
             </p>
-            <small className="muted">
-              Sample records generated for {dateLabel(new Date().toISOString())}
-              .
-            </small>
           </div>
           <div className="form-actions">
             <button className="button primary" onClick={() => setHelp(false)}>

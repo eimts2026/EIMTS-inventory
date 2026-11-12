@@ -2,10 +2,12 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { InventoryState } from "./model";
 import { now, officerName, uid } from "./model";
-import { createSeed } from "./seed";
+import { createEmptyWorkspace } from "./emptyWorkspace";
 import { inventorySchema } from "./schema";
 
-const storageKey = "eimts-inventory-preview-v1";
+// A new key prevents fictional records reappearing in returning browsers.
+// Keep the legacy key untouched so manually entered preview data remains recoverable.
+const storageKey = "eimts-inventory-empty-v1";
 interface Store {
   state: InventoryState;
   commit: (
@@ -28,9 +30,9 @@ function load(): InventoryState {
       if (parsed.success) return parsed.data;
     }
   } catch {
-    /* A fresh sample workspace keeps an unavailable browser store usable. */
+    /* An unavailable browser store opens an empty workspace. */
   }
-  return createSeed();
+  return createEmptyWorkspace();
 }
 
 export function InventoryProvider({ children }: { children: ReactNode }) {

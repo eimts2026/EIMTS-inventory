@@ -23,15 +23,21 @@ Open the local URL printed by Vite. Run `npm run build` for a production build a
 - Repair tracking with service references, costs, and return to IT stock.
 - Consumable receipts and issues, stock history, and reorder thresholds.
 - Employee and location records, six printable/exportable reports, and activity history.
-- Workspace defaults, IT account drafts, validated preview backup export/restore, and sample-data reset.
+- Workspace defaults, IT account drafts, and validated preview backup export/restore.
 
 Documents are printed and stored in physical files. The app records their reference numbers and filing locations.
 
 ## Preview data and the next step
 
-The frontend starts with fictional people, branches, and 24 assets. It saves changes in this browser’s local storage. Settings provides a sample reset and a JSON export/restore workflow. Data validation checks tags, serials, IDs, references, and active custody before accepting a backup.
+The preview opens on a dummy IT sign-in screen. Use `it@eimts.demo` and `Inventory123!`. Signing out or reloading returns to this screen. These are public demo credentials for the frontend walkthrough.
 
-Shared persistence, approved IT sign-in, MFA, enforced admin/officer permissions, account revocation, database transactions, and scheduled encrypted backups are pending the Supabase PostgreSQL integration. Account entries in Settings are local drafts. Browser data and activity history are editable by the device owner.
+Typography uses locally bundled Inter with larger table and supporting text. Form and filter menus use custom keyboard-accessible selects. Card, button, menu, and dialog motion respects reduced-motion preferences.
+
+The frontend starts empty and saves changes in this browser’s local storage. The previous demo cache remains untouched under `eimts-inventory-preview-v1` for recovery of manually entered preview records. It is never loaded into the new workspace or uploaded. Settings provides a JSON export/restore workflow. Data validation checks tags, serials, IDs, references, and active custody before accepting a backup.
+
+Supabase project `kmfuzygltjwhjwmwebbd` now has the first backend milestone for IT authorization, directory records, assets, transactional custody, paper references, and database activity history. See [backend implementation](supabase/README.md) for SQL, commands, verification, and remaining work.
+
+The frontend still uses local browser persistence and the dummy login. Real Auth, frontend database integration, physical verification SQL, maintenance, consumables, reports, and database backup operations remain pending. Account entries in Settings are local drafts. Browser data and activity history are editable by the device owner.
 
 Camera scanning needs browser camera permission and a secure context such as HTTPS or localhost. Manual entry works through the same verification form. Hardware camera capture and physical printer output need checks on the department’s devices.
 
@@ -40,8 +46,3 @@ Camera scanning needs browser camera permission and a secure context such as HTT
 The Vite build outputs to `dist`. `vercel.json` supplies the build configuration and frontend routing. The app can use a Vercel-provided URL and a custom subdomain when available.
 
 Vercel’s Hobby plan is restricted to personal, non-commercial use. Choose an eligible plan for company deployment. [Vercel Hobby terms](https://vercel.com/docs/plans/hobby)
-
-## Frontend sign-in preview
-
-Use the demo email it@eimts.demo and password Inventory123! to enter the workspace. Signing out or refreshing returns to the dummy login. Inter typography and custom form/filter menus are bundled locally.
-
