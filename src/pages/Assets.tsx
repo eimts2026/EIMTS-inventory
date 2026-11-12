@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import {
   ArrowDownToLine,
@@ -264,11 +265,11 @@ export function Assets({
             }}
             placeholder="Search name, tag, serial, or custodian…"
           />
-          <select
+          <Select
             aria-label="Filter by category"
             value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
+            onValueChange={(event) => {
+              setCategory(event);
               setPage(1);
             }}
           >
@@ -276,12 +277,12 @@ export function Assets({
             {categories.map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             aria-label="Filter by location"
             value={locationId}
-            onChange={(event) => {
-              setLocationId(event.target.value);
+            onValueChange={(event) => {
+              setLocationId(event);
               setPage(1);
             }}
           >
@@ -291,7 +292,7 @@ export function Assets({
                 {location.branch} / {location.name}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             className="icon-button outlined"
             aria-label="Export filtered assets"

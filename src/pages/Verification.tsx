@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -399,30 +400,28 @@ export function Verification({
                         />
                       </Field>
                       <Field label="Observed location">
-                        <select
+                        <Select
                           value={observedLocation}
-                          onChange={(event) =>
-                            setObservedLocation(event.target.value)
-                          }
+                          onValueChange={(event) => setObservedLocation(event)}
                         >
                           {state.locations.map((location) => (
                             <option value={location.id} key={location.id}>
                               {location.branch} / {location.name}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </Field>
                       <Field label="Observed condition">
-                        <select
+                        <Select
                           value={condition}
-                          onChange={(event) =>
-                            setCondition(event.target.value as Condition)
+                          onValueChange={(event) =>
+                            setCondition(event as Condition)
                           }
                         >
                           {["Good", "Fair", "Damaged"].map((value) => (
                             <option key={value}>{value}</option>
                           ))}
-                        </select>
+                        </Select>
                       </Field>
                       <Field label="Verification notes" full>
                         <input
@@ -571,17 +570,17 @@ export function Verification({
                 />
               </Field>
               <Field label="Location" full>
-                <select
+                <Select
                   required
                   value={locationId}
-                  onChange={(event) => setLocationId(event.target.value)}
+                  onValueChange={(event) => setLocationId(event)}
                 >
                   {state.locations.map((location) => (
                     <option key={location.id} value={location.id}>
                       {location.branch} / {location.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Due date" full>
                 <input

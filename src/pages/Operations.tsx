@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Check, CircleAlert, Plus, Wrench } from "lucide-react";
@@ -253,10 +254,10 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
           <form onSubmit={save}>
             <div className="form-grid">
               <Field label="Asset" full>
-                <select
+                <Select
                   required
                   value={assetId}
-                  onChange={(event) => setAssetId(event.target.value)}
+                  onValueChange={(event) => setAssetId(event)}
                 >
                   <option value="">Select an asset</option>
                   {state.assets.map((asset) => (
@@ -264,7 +265,7 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                       {asset.tag} / {asset.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Description" full>
                 <input
@@ -275,10 +276,7 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                 />
               </Field>
               <Field label="Issue type">
-                <select
-                  value={type}
-                  onChange={(event) => setType(event.target.value)}
-                >
+                <Select value={type} onValueChange={(event) => setType(event)}>
                   {[
                     "Location mismatch",
                     "Custodian mismatch",
@@ -290,7 +288,7 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                   ].map((value) => (
                     <option key={value}>{value}</option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Follow-up due">
                 <input
@@ -301,22 +299,20 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                 />
               </Field>
               <Field label="IT owner">
-                <select
+                <Select
                   required
                   value={owner}
-                  onChange={(event) => setOwner(event.target.value)}
+                  onValueChange={(event) => setOwner(event)}
                 >
                   {state.members.map((member) => (
                     <option key={member.id}>{member.name}</option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Observed location">
-                <select
+                <Select
                   value={observedLocationId}
-                  onChange={(event) =>
-                    setObservedLocationId(event.target.value)
-                  }
+                  onValueChange={(event) => setObservedLocationId(event)}
                 >
                   <option value="">Not observed</option>
                   {state.locations.map((location) => (
@@ -324,7 +320,7 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                       {location.branch} / {location.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Notes" full>
                 <textarea
@@ -623,10 +619,10 @@ export function Maintenance({
           <form onSubmit={create}>
             <div className="form-grid">
               <Field label="Asset in IT stock" full>
-                <select
+                <Select
                   required
                   value={assetId}
-                  onChange={(event) => setAssetId(event.target.value)}
+                  onValueChange={(event) => setAssetId(event)}
                 >
                   <option value="">Choose a device</option>
                   {eligible.map((asset) => (
@@ -634,7 +630,7 @@ export function Maintenance({
                       {asset.tag} / {asset.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Fault description" full>
                 <input

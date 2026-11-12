@@ -1,3 +1,4 @@
+import { Select } from "./Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type { Condition } from "../model";
@@ -128,15 +129,15 @@ export function CustodyForm({
       <form onSubmit={save}>
         <div className="form-grid">
           <Field label="Asset" full>
-            <select
+            <Select
               required
               disabled={dialog.kind !== "issue" || Boolean(dialog.id)}
               value={assetId}
-              onChange={(event) => {
-                setAssetId(event.target.value);
+              onValueChange={(event) => {
+                setAssetId(event);
                 setLocationId(
-                  state.assets.find((item) => item.id === event.target.value)
-                    ?.locationId || locationId,
+                  state.assets.find((item) => item.id === event)?.locationId ||
+                    locationId,
                 );
               }}
             >
@@ -150,14 +151,14 @@ export function CustodyForm({
                     {item.tag} / {item.name}
                   </option>
                 ))}
-            </select>
+            </Select>
           </Field>
           {dialog.kind !== "return" && (
             <Field label="Employee receiving the asset" full>
-              <select
+              <Select
                 required={dialog.kind === "issue"}
                 value={personId}
-                onChange={(event) => setPersonId(event.target.value)}
+                onValueChange={(event) => setPersonId(event)}
               >
                 <option value="">IT stock / no custodian</option>
                 {state.people.map((person) => (
@@ -165,7 +166,7 @@ export function CustodyForm({
                     {person.name} / {person.employeeId}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           )}
           <Field
@@ -176,30 +177,28 @@ export function CustodyForm({
             }
             full
           >
-            <select
+            <Select
               required
               value={locationId}
-              onChange={(event) => setLocationId(event.target.value)}
+              onValueChange={(event) => setLocationId(event)}
             >
               {state.locations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.branch} / {location.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           {dialog.kind === "return" ? (
             <Field label="Condition on return">
-              <select
+              <Select
                 value={condition}
-                onChange={(event) =>
-                  setCondition(event.target.value as Condition)
-                }
+                onValueChange={(event) => setCondition(event as Condition)}
               >
                 {["Good", "Fair", "Damaged"].map((value) => (
                   <option key={value}>{value}</option>
                 ))}
-              </select>
+              </Select>
             </Field>
           ) : (
             <>

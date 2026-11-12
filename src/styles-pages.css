@@ -6,8 +6,8 @@
   flex-wrap: wrap;
   border-bottom: 1px solid var(--line);
 }
-.table-toolbar > select {
-  font-size: 11px;
+.table-toolbar > .select-trigger {
+  font-size: 13px;
   min-height: 36px;
   padding: 7px 9px;
 }
@@ -27,7 +27,7 @@
   border: 0;
   padding: 8px 0;
   background: transparent;
-  font-size: 11px;
+  font-size: 13px;
   width: 100%;
   min-height: 35px;
 }
@@ -42,7 +42,7 @@
   gap: 10px;
   border-top: 1px solid var(--line);
   padding: 15px 20px;
-  font-size: 10px;
+  font-size: 12px;
   color: #5e705f;
 }
 .table-footer > div {
@@ -55,7 +55,7 @@
   min-height: 29px;
 }
 .table-link {
-  font-size: 11px;
+  font-size: 13px;
   color: #356c4a;
   text-align: left;
   padding: 2px 0;
@@ -102,7 +102,7 @@
 .summary-strip span {
   display: block;
   color: #5e705f;
-  font-size: 11px;
+  font-size: 13px;
 }
 .empty {
   display: flex;
@@ -119,11 +119,11 @@
 }
 .empty h3 {
   color: #415a40;
-  font-size: 15px;
+  font-size: 17px;
   margin-bottom: 8px;
 }
 .empty p {
-  font-size: 12px;
+  font-size: 14px;
   max-width: 340px;
   margin-bottom: 12px;
 }
@@ -160,7 +160,7 @@
 }
 .modal-header p {
   color: #5e705f;
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 7px;
 }
 .modal-header > button {
@@ -171,7 +171,7 @@
   padding: 24px;
 }
 .modal-body > p {
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: 15px;
 }
 .modal-body > .button,
@@ -188,16 +188,16 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: 12px;
+  font-size: 14px;
   min-width: 0;
 }
 .field > span {
   font-weight: 500;
   color: #52634c;
-  font-size: 11px;
+  font-size: 13px;
 }
 .field > input,
-.field > select,
+.field > .select-trigger,
 .field > textarea {
   width: 100%;
 }
@@ -205,7 +205,7 @@
   grid-column: 1 / -1;
 }
 .field-note {
-  font-size: 11px;
+  font-size: 13px;
   color: #5e705f;
   line-height: 1.6;
 }
@@ -224,7 +224,7 @@
   margin: 0 24px 18px;
   padding: 11px 13px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .modal-body .form-error,
 .scan-workspace .form-error,
@@ -235,7 +235,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
   color: #5a6f50;
 }
@@ -248,7 +248,7 @@
   color: #607652;
   border-radius: 7px;
   padding: 13px 16px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   margin-bottom: 21px;
 }
@@ -265,13 +265,13 @@
   padding: 18px;
   border-radius: 8px;
   margin-top: 20px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .success-note strong {
   margin-left: 8px;
 }
 .success-note p {
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 9px;
 }
 .asset-detail-hero {
@@ -284,7 +284,7 @@
   flex: 1;
 }
 .asset-detail-hero p {
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 8px;
 }
 .device-icon.large {
@@ -300,13 +300,13 @@
   margin: 0;
 }
 .detail-grid dt {
-  font-size: 11px;
+  font-size: 13px;
   color: #5e705f;
   margin-bottom: 7px;
 }
 .detail-grid dd {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
 }
 .detail-actions {
@@ -329,7 +329,7 @@
 }
 .subtle-button {
   color: #5e705f;
-  font-size: 11px;
+  font-size: 13px;
   padding: 5px 0;
 }
 .timeline {
@@ -339,7 +339,7 @@
   border-left: 1px solid #dfe7d8;
   padding: 0 0 25px 25px;
   position: relative;
-  font-size: 13px;
+  font-size: 15px;
 }
 .timeline > div:last-child {
   border-left-color: transparent;
@@ -357,7 +357,7 @@
 }
 .timeline p {
   color: #5e705f;
-  font-size: 12px;
+  font-size: 14px;
   margin: 6px 0;
 }
 .timeline small {
@@ -399,13 +399,13 @@
   line-height: 1.5;
 }
 .audit-card p {
-  font-size: 10px;
+  font-size: 12px;
   color: #5e705f;
   margin: 8px 0 15px;
 }
 .audit-card small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #5e705f;
   margin-top: 9px;
 }
@@ -426,10 +426,10 @@
   margin-bottom: 18px;
 }
 .scan-intro h3 {
-  font-size: 14px;
+  font-size: 16px;
 }
 .scan-intro p {
-  font-size: 11px;
+  font-size: 13px;
   color: #5e705f;
   margin-top: 6px;
 }
@@ -450,17 +450,17 @@
 .scan-input input {
   flex: 1;
   width: 100%;
-  font-size: 12px;
+  font-size: 14px;
 }
 .scan-asset {
   display: flex;
   align-items: center;
   gap: 13px;
   margin: 18px 0 0;
-  font-size: 13px;
+  font-size: 15px;
 }
 .scan-asset p {
-  font-size: 11px;
+  font-size: 13px;
   color: #5e705f;
   margin-top: 4px;
 }
@@ -479,7 +479,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 13px;
   margin-bottom: 8px;
 }
 .camera-panel video {
@@ -512,13 +512,13 @@
   flex-wrap: wrap;
 }
 .issue-main h3 {
-  font-size: 13px;
+  font-size: 15px;
 }
 .issue-main > .table-link {
   margin-top: 8px;
 }
 .issue-main > p {
-  font-size: 12px;
+  font-size: 14px;
   color: #5e705f;
   margin: 8px 0;
   white-space: pre-line;
@@ -527,7 +527,7 @@
   display: block;
   color: #5e705f;
   margin-top: 13px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .location-comparison {
   display: flex;
@@ -540,7 +540,7 @@
   width: fit-content;
 }
 .location-comparison span {
-  font-size: 10px;
+  font-size: 12px;
   color: #5e705f;
 }
 .location-comparison strong {
@@ -568,7 +568,7 @@
   gap: 9px;
   align-items: center;
   color: #5e705f;
-  font-size: 12px;
+  font-size: 14px;
 }
 .report-grid {
   display: grid;
@@ -593,10 +593,10 @@
 }
 .report-card h3 {
   margin: 20px 0 8px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .report-card p {
-  font-size: 11px;
+  font-size: 13px;
   color: #5e705f;
 }
 .report-arrow {
@@ -614,7 +614,7 @@
   padding: 0 23px 23px;
 }
 .settings-copy > p {
-  font-size: 12px;
+  font-size: 14px;
   color: #5e705f;
   margin-bottom: 15px;
 }
@@ -623,7 +623,7 @@
 }
 .settings-copy .field-note {
   margin-top: 16px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .file-button {
   position: relative;
@@ -649,18 +649,18 @@
   gap: 14px;
   padding: 22px 0;
   border-bottom: 1px solid #e5ebdc;
-  font-size: 13px;
+  font-size: 15px;
 }
 .activity-list > article:last-child {
   border: 0;
 }
 .activity-list p {
-  font-size: 12px;
+  font-size: 14px;
   color: #5e705f;
   margin: 7px 0;
 }
 .activity-list small {
-  font-size: 10px;
+  font-size: 12px;
   color: #5e705f;
 }
 .help-steps {
@@ -671,7 +671,7 @@
   align-items: center;
   gap: 13px;
   padding: 12px 0;
-  font-size: 12px;
+  font-size: 14px;
   border-bottom: 1px solid #e6ecdf;
 }
 .help-steps svg {
@@ -689,11 +689,11 @@
   border-bottom: 2px solid #304d30;
   padding-bottom: 13px;
   margin-bottom: 25px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .paper-heading > span {
   color: #677260;
-  font-size: 11px;
+  font-size: 13px;
 }
 .print-sheet h2 {
   font-size: 20px;
@@ -706,7 +706,7 @@
   gap: 20px;
 }
 .paper-asset p {
-  font-size: 13px;
+  font-size: 15px;
   color: #5e705f;
   margin-top: 7px;
 }
@@ -714,7 +714,7 @@
   padding: 25px 0;
 }
 .paper-statement {
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 20px;
 }
 .signature-lines {
@@ -725,7 +725,7 @@
 .signature-lines span {
   border-top: 1px solid #52634a;
   padding-top: 13px;
-  font-size: 11px;
+  font-size: 13px;
   flex: 1;
 }
 .label-grid {
@@ -744,11 +744,11 @@
   break-inside: avoid;
 }
 .asset-label strong {
-  font-size: 11px;
+  font-size: 13px;
   margin: 8px 0 5px;
 }
 .asset-label small {
-  font-size: 9px;
+  font-size: 12px;
 }
 .qr-placeholder {
   width: 106px;
@@ -805,7 +805,7 @@
   }
   .search-field input,
   .field input,
-  .field select,
+  .field .select-trigger,
   .field textarea,
   .scan-input input {
     font-size: 16px;
@@ -813,14 +813,14 @@
   .search-field input::placeholder,
   .field input::placeholder,
   .scan-input input::placeholder {
-    font-size: 12px;
+    font-size: 14px;
   }
   .search-field input {
     min-height: 40px;
   }
-  .table-toolbar select {
+  .table-toolbar .select-trigger {
     max-width: 150px;
-    font-size: 12px;
+    font-size: 14px;
     min-height: 40px;
     flex: 1;
   }
@@ -842,7 +842,7 @@
     font-size: 22px;
   }
   .summary-strip span {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
   }
   .summary-strip > div:last-child {
@@ -876,7 +876,7 @@
     min-height: 42px;
   }
   .info-note {
-    font-size: 11px;
+    font-size: 13px;
     padding: 13px;
   }
   .issue-list {
@@ -927,11 +927,11 @@
     padding: 17px 14px;
   }
   .report-card h3 {
-    font-size: 12px;
+    font-size: 14px;
     margin-top: 18px;
   }
   .report-card p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .report-arrow {
     top: 17px;
@@ -949,7 +949,7 @@
     gap: 11px;
   }
   .asset-detail-hero p {
-    font-size: 11px;
+    font-size: 13px;
   }
   .asset-detail-hero .device-icon.large {
     width: 48px;
@@ -960,10 +960,10 @@
     gap: 22px 18px;
   }
   .detail-grid dd {
-    font-size: 12px;
+    font-size: 14px;
   }
   .detail-grid dt {
-    font-size: 10px;
+    font-size: 12px;
   }
   .detail-actions {
     margin: 0 20px 20px;
@@ -981,7 +981,7 @@
     min-height: 42px;
   }
   .checkbox-field {
-    font-size: 12px;
+    font-size: 14px;
     align-items: flex-start;
   }
   .checkbox-field input {
@@ -1038,7 +1038,7 @@
     overflow: visible;
   }
   .print-sheet table {
-    font-size: 9px;
+    font-size: 12px;
     table-layout: fixed;
   }
   .print-sheet td,

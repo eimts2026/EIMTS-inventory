@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Building2, MapPin, Pencil, Plus, Users } from "lucide-react";
@@ -297,11 +298,11 @@ export function Organisation() {
                 />
               </Field>
               <Field label="Office" full>
-                <select
+                <Select
                   required
                   value={person.locationId}
-                  onChange={(event) =>
-                    setPerson({ ...person, locationId: event.target.value })
+                  onValueChange={(event) =>
+                    setPerson({ ...person, locationId: event })
                   }
                 >
                   {state.locations.map((location) => (
@@ -309,7 +310,7 @@ export function Organisation() {
                       {location.branch} / {location.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
             </div>
             <ErrorMessage error={error} />

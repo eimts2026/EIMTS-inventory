@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -285,18 +286,18 @@ export function Settings() {
                 />
               </Field>
               <Field label="IT role" full>
-                <select
+                <Select
                   value={member.role}
-                  onChange={(event) =>
+                  onValueChange={(event) =>
                     setMember({
                       ...member,
-                      role: event.target.value as Member["role"],
+                      role: event as Member["role"],
                     })
                   }
                 >
                   <option>IT Officer</option>
                   <option>IT Admin</option>
-                </select>
+                </Select>
               </Field>
             </div>
             <ErrorMessage error={error} />

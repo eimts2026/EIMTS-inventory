@@ -1,3 +1,4 @@
+import { Select } from "./Select";
 import { CustodyForm } from "./CustodyForm";
 import { PaperPreview } from "./PaperPreview";
 import { useState } from "react";
@@ -174,41 +175,37 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
             />
           </Field>
           <Field label="Category">
-            <select
+            <Select
               value={asset.category}
-              onChange={(event) =>
-                update("category", event.target.value as Category)
-              }
+              onValueChange={(event) => update("category", event as Category)}
             >
               {categories.map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Location">
-            <select
+            <Select
               required
               value={asset.locationId}
-              onChange={(event) => update("locationId", event.target.value)}
+              onValueChange={(event) => update("locationId", event)}
             >
               {state.locations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.branch} / {location.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Condition">
-            <select
+            <Select
               value={asset.condition}
-              onChange={(event) =>
-                update("condition", event.target.value as Condition)
-              }
+              onValueChange={(event) => update("condition", event as Condition)}
             >
               {["Good", "Fair", "Damaged"].map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field label="Next verification">
             <input

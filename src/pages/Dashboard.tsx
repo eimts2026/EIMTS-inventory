@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import {
   ArrowDownLeft,
@@ -108,10 +109,10 @@ export function Dashboard({
           <span className="live-dot" />
           IT department workspace
         </span>
-        <select
+        <Select
           aria-label="Dashboard branch"
           value={branch}
-          onChange={(event) => setBranch(event.target.value)}
+          onValueChange={(event) => setBranch(event)}
         >
           <option value="">All branches</option>
           {[...new Set(state.locations.map((location) => location.branch))].map(
@@ -119,7 +120,7 @@ export function Dashboard({
               <option key={value}>{value}</option>
             ),
           )}
-        </select>
+        </Select>
       </div>
       <div className="metric-grid">
         {[

@@ -40,3 +40,8 @@ Camera scanning needs browser camera permission and a secure context such as HTT
 The Vite build outputs to `dist`. `vercel.json` supplies the build configuration and frontend routing. The app can use a Vercel-provided URL and a custom subdomain when available.
 
 Vercel’s Hobby plan is restricted to personal, non-commercial use. Choose an eligible plan for company deployment. [Vercel Hobby terms](https://vercel.com/docs/plans/hobby)
+
+## Frontend sign-in preview
+
+Use the demo email it@eimts.demo and password Inventory123! to enter the workspace. Signing out or refreshing returns to the dummy login. Inter typography and custom form/filter menus are bundled locally.
+
