@@ -3,15 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Check, CircleAlert, Plus, Wrench } from "lucide-react";
 import type { Issue, Repair } from "../model";
-import {
-  currency,
-  dateLabel,
-  now,
-  officerName,
-  relativeDay,
-  today,
-  uid,
-} from "../model";
+import { currency, dateLabel, now, relativeDay, today, uid } from "../model";
 import { useInventory } from "../store";
 import {
   Badge,
@@ -26,7 +18,7 @@ import {
 import type { AssetDialog } from "../components/AssetDialogs";
 
 export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const [tab, setTab] = useState("Open");
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
@@ -34,7 +26,9 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
   const [assetId, setAssetId] = useState("");
   const [title, setTitle] = useState("");
   const [type, setType] = useState("Location mismatch");
-  const [owner, setOwner] = useState(officerName);
+  const [owner, setOwner] = useState(
+    state.members.find((member) => member.active)?.id || "",
+  );
   const [dueAt, setDueAt] = useState(relativeDay(7));
   const [observedLocationId, setObservedLocationId] = useState("");
   const [note, setNote] = useState("");
@@ -48,50 +42,47 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
-    const asset = state.assets.find((item) => item.id === assetId);
-    if (!asset || !title.trim())
-      return setError("Select an asset and describe the discrepancy.");
-    const issue: Issue = {
-      id: uid(),
-      assetId,
-      auditId: "",
-      title: title.trim(),
-      type,
-      owner,
-      dueAt,
-      status: "Open",
-      note: note.trim(),
-      expectedLocationId: asset.locationId,
-      observedLocationId,
-      resolvedAt: "",
-    };
-    commit("Discrepancy opened", `${asset.tag} · ${title.trim()}`, (draft) => {
-      draft.issues.unshift(issue);
-    });
-    setCreating(false);
-    setTitle("");
-    setNote("");
+    if (
+      await command(
+        "raise_discrepancy",
+        {
+          asset_id: assetId,
+          title: title.trim(),
+          type,
+          owner_id: owner,
+          due_on: dueAt,
+          observed_location_id: observedLocationId || null,
+          note: note.trim(),
+        },
+        "Discrepancy opened",
+      )
+    ) {
+      setCreating(false);
+      setTitle("");
+      setNote("");
+    }
   }
-  function resolve(event: FormEvent) {
+  async function resolve(event: FormEvent) {
     event.preventDefault();
     if (!resolving || !resolution.trim())
       return setError("Record how the discrepancy was resolved.");
-    commit(
-      "Discrepancy resolved",
-      `${state.assets.find((asset) => asset.id === resolving.assetId)?.tag} · ${resolution.trim()}`,
-      (draft) => {
-        const issue = draft.issues.find((item) => item.id === resolving.id)!;
-        issue.status = "Resolved";
-        issue.resolvedAt = now();
-        issue.note += `\nResolution: ${resolution.trim()}`;
-        if (applyLocation && issue.observedLocationId)
-          draft.assets.find((asset) => asset.id === issue.assetId)!.locationId =
-            issue.observedLocationId;
-      },
-    );
-    setResolving(null);
+    const asset = state.assets.find((item) => item.id === resolving.assetId);
+    if (
+      await command(
+        "resolve_discrepancy",
+        {
+          id: resolving.id,
+          version: resolving.version || 1,
+          resolution: resolution.trim(),
+          apply_location: applyLocation,
+          asset_version: asset?.version || 1,
+        },
+        "Discrepancy resolved",
+      )
+    )
+      setResolving(null);
   }
   return (
     <>
@@ -305,7 +296,9 @@ export function Issues({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
                   onValueChange={(event) => setOwner(event)}
                 >
                   {state.members.map((member) => (
-                    <option key={member.id}>{member.name}</option>
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
                   ))}
                 </Select>
               </Field>

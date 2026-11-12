@@ -1,21 +1,32 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense } from "react";
 import { Login } from "./pages/Login";
-import { InventoryProvider } from "./store";
+import { AuthProvider, useAuth } from "./auth";
 const Workspace = lazy(() => import("./Workspace"));
 export function App() {
-  const [signedIn, setSignedIn] = useState(false);
-  if (!signedIn) return <Login onLogin={() => setSignedIn(true)} />;
   return (
-    <InventoryProvider>
-      <Suspense
-        fallback={
-          <div className="workspace-loading" role="status">
-            Opening your workspace…
-          </div>
-        }
-      >
-        <Workspace onLogout={() => setSignedIn(false)} />
-      </Suspense>
-    </InventoryProvider>
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
+  );
+}
+function AuthenticatedApp() {
+  const { session, member, loading, recovery, signOut } = useAuth();
+  if (loading)
+    return (
+      <div className="workspace-loading" role="status">
+        Checking IT access…
+      </div>
+    );
+  if (!session || !member || recovery) return <Login />;
+  return (
+    <Suspense
+      fallback={
+        <div className="workspace-loading" role="status">
+          Opening your workspace…
+        </div>
+      }
+    >
+      <Workspace key={session.user.id} onLogout={() => void signOut()} />
+    </Suspense>
   );
 }

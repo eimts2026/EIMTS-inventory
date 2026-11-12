@@ -4,9 +4,9 @@ Supabase project `kmfuzygltjwhjwmwebbd`, named `Eimts-Inventory`.
 
 ## Implemented milestone
 
-The database implements IT membership, branches, locations, employee custodians, settings, assets, custody history, signed paper references, and activity history. Inventory and Auth identities start empty. Organisation defaults are configuration.
+The database implements IT membership, branches, locations, employee custodians, settings, assets, custody history, signed paper references, physical verification snapshots, observations, discrepancies, and activity history. Inventory starts empty. The initial confirmed IT Admin is `admin@emeraldisle.lk`.
 
-The frontend currently uses browser persistence and the existing dummy login. Real Auth and database integration follow in a later step. Adding a publishable key alone does not authorize a user to access inventory.
+The frontend uses real Supabase Auth and database commands. Adding a publishable key alone does not authorize a user to access inventory. Browser preview data is not imported automatically.
 
 ## SQL files
 
@@ -20,7 +20,7 @@ The frontend currently uses browser persistence and the existing dummy login. Re
 
 `it_members` is the explicit allowlist. `IT Admin` manages access and organisation settings. Both IT roles can maintain inventory and custody. A person in the employee directory receives no login permissions. Every request checks the membership table, including active status, Auth deletion, anonymous status, and account bans. User-editable metadata is not used for authorization.
 
-When Auth integration begins, create or invite the intended first administrator through Supabase Auth and verify their identity. Bootstrap their membership through trusted SQL in a transaction that sets `request.jwt.claims` to that verified Auth user ID. Then insert the member with the `IT Admin` role. The trigger attributes the bootstrap to that identity. No bootstrap identity or membership was created for production.
+The chosen administrator was created by the project owner in Auth and granted IT membership through trusted SQL. Its email confirmation and successful browser sign-in were verified. Further accounts can be created in Supabase Auth and granted inventory roles by an IT Admin in Settings. Passwords stay in Supabase Auth.
 
 Every exposed table uses RLS. Clients have SELECT grants only. Sensitive helper functions live in the `private` schema, with an empty search path and restricted execution. Client writes pass through `inventory_command`, which checks membership and validates the operation. Changes are recorded by database triggers. Application roles cannot forge or edit activity entries. Trusted database administrators retain normal administrative access.
 
@@ -33,13 +33,13 @@ Call `inventory_command(p_request_id, p_action, p_data)` using a signed-in appro
 | Action | Required data |
 | --- | --- |
 | `save_branch` | `name`, optional client `id`. Edits also supply current `version` and `active`. |
-| `save_location` | `name`, `branch_id`, optional `id`. Edits also supply `version` and `active`. |
+| `save_location` | `name`, either `branch_id` or `branch_name`, optional `id`. Edits also supply `version` and `active`. A new branch name and its location are saved atomically. |
 | `save_person` | `name`, `employee_id`, `department`, `location_id`, optional `id`. Edits also supply `version` and `active`. |
 | `save_asset` | `tag`, `name`, `category`, `condition`, `location_id`, optional `id`, `serial`, `cost`, `purchased_on`, `warranty_until`, `next_verification_on`. Edits supply all metadata and current `version`. |
 | `issue_asset` | `asset_id`, `asset_version`, `person_id`, `location_id`, `condition`, `paper_reference`. Optional `due_on`, `accessories`, `filing_location`, `signed_received`. |
 | `transfer_asset` | Issue fields plus current `handover_id`, `return_reference`, optional `return_filing`. |
 | `return_asset` | `asset_id`, `asset_version`, current `handover_id`, `location_id`, `condition`, `return_reference`, optional `return_filing`. |
-| `record_signed_form` | `handover_id`, current handover `version`, `filing_location`. Records the current officer and server time. |
+| `record_signed_form` | `handover_id`, current handover `version`, `signed_received`, `filing_location`, optional corrected `paper_reference`. Records the current officer and server time when received. |
 | `retire_asset` | `asset_id`, `asset_version`, `note`. Asset must be returned and available or awaiting service. |
 | `save_settings` | Current `version`, `organisation`, `verification_days`, `paper_prefix`. Admin only. |
 | `save_it_member` | Existing Auth `user_id`, `display_name`, `role`, optional `active`. Edits also supply current `version` and `active`. Admin only. |
@@ -52,12 +52,24 @@ Row versions reject stale edits with SQLSTATE `40001`. Validation errors use `22
 
 ## Verification performed
 
-- Applied three migrations and generated TypeScript types from the hosted schema.
+- Applied seven migrations and generated TypeScript types from the hosted schema.
 - Executed rollback-only assertions for approved IT access, non-IT denial, anonymous denial, metadata privilege escalation denial, direct write denial, admin-only changes, the final-admin rule, and deactivation.
 - Checked issue, transfer, signed form attribution, damaged return, duplicate request handling, stale versions, and atomic rollback after a failed transfer.
 - Submitted two simultaneous issue requests for one asset. One succeeded. The competitor received `40001`, and SQL confirmed exactly one open handover. Temporary committed concurrency fixtures were removed after the test.
-- Ran Supabase security and performance advisors. Revoked client execution on the Supabase-provided `rls_auto_enable` event trigger. Retry receipts have an explicit deny policy. The remaining Auth warning is disabled leaked-password protection, which needs review during the deferred login step. New database indexes also have informational unused-index notices before real workload exists. [Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+- Ran Supabase security and performance advisors. Revoked client execution on the Supabase-provided `rls_auto_enable` event trigger. Retry receipts have an explicit deny policy. The remaining Auth warning is disabled leaked-password protection, which remains a project Auth setting. New database indexes also have informational unused-index notices before real workload exists. [Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
 
 ## Remaining approved work
 
-Physical verification snapshots and observations, discrepancies, maintenance, consumable movements, database reports, frontend data integration, real sign-in, IT account provisioning, and database backup/restore operations follow in later milestones. Real inventory will be normalized and validated in a dry run when the source data is supplied. No real inventory import has run.
+Maintenance, consumable movements, additional database reports, MFA, and database backup/restore operations follow in later milestones. Password-recovery email delivery and redirect configuration need verification against the deployment's Auth settings. Leaked-password protection remains disabled in the project. Real inventory will be normalized and validated in a dry run when the source data is supplied. No real inventory import has run.
+
+## Physical verification commands
+
+`start_audit` accepts `id`, `name`, `location_id`, and `due_on`. It freezes asset IDs, tags, serials, conditions, locations, and custodians. `record_observation` accepts `audit_id`, `asset_id`, `observed_location_id`, `condition`, `confirmed_serial`, and `note`. The caller's Auth ID and server time provide verification attribution. Unknown snapshot serials require identification evidence in the notes. Location mismatch and damage each create their own discrepancy.
+
+`close_audit` accepts `audit_id`. Unseen expected assets create missing-asset cases. A repeated close returns the already-closed audit. Recording observations in a closed audit is rejected.
+
+`raise_discrepancy` accepts `asset_id`, `title`, `type`, `owner_id`, `due_on`, optional `observed_location_id`, and `note`. `resolve_discrepancy` accepts `id`, current `version`, `resolution`, and optional `apply_location` plus current `asset_version`. Location correction is explicit and does not change the frozen audit evidence.
+
+`inventory_snapshot` returns one consistent server snapshot for the existing dashboard, forms, reports, and exports. Its activity history is limited to the newest 1,000 entries. Full audit and custody records remain in their own tables.
+
+`tests/verification.sql` passed checks for frozen known and unknown serials, serial mismatches, damage, retries, missing assets on closure, repeated closure, resolution conflicts, and evidence protection. Browser checks also passed directory creation, asset registration with unknown purchase cost/date, audit creation, physical observation, automatic discrepancy creation, and resolution. Temporary browser-test inventory was removed afterward.

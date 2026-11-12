@@ -1,4 +1,3 @@
-// Generated from the live Eimts-Inventory schema. Regenerate after schema changes.
 export type Json =
   | string
   | number
@@ -137,6 +136,130 @@ export type Database = {
           },
         ];
       };
+      audit_items: {
+        Row: {
+          asset_id: string;
+          audit_id: string;
+          expected_condition: string;
+          expected_location_id: string;
+          expected_person_id: string | null;
+          expected_serial: string | null;
+          expected_tag: string;
+        };
+        Insert: {
+          asset_id: string;
+          audit_id: string;
+          expected_condition: string;
+          expected_location_id: string;
+          expected_person_id?: string | null;
+          expected_serial?: string | null;
+          expected_tag: string;
+        };
+        Update: {
+          asset_id?: string;
+          audit_id?: string;
+          expected_condition?: string;
+          expected_location_id?: string;
+          expected_person_id?: string | null;
+          expected_serial?: string | null;
+          expected_tag?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_items_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "asset_register";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_items_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_items_audit_id_fkey";
+            columns: ["audit_id"];
+            isOneToOne: false;
+            referencedRelation: "audits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_items_expected_location_id_fkey";
+            columns: ["expected_location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_items_expected_person_id_fkey";
+            columns: ["expected_person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audits: {
+        Row: {
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+          created_by: string;
+          due_on: string;
+          id: string;
+          location_id: string;
+          name: string;
+          version: number;
+        };
+        Insert: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          due_on: string;
+          id?: string;
+          location_id: string;
+          name: string;
+          version?: number;
+        };
+        Update: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          due_on?: string;
+          id?: string;
+          location_id?: string;
+          name?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audits_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "audits_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "audits_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       branches: {
         Row: {
           active: boolean;
@@ -163,6 +286,123 @@ export type Database = {
           version?: number;
         };
         Relationships: [];
+      };
+      discrepancies: {
+        Row: {
+          asset_id: string;
+          audit_id: string | null;
+          created_at: string;
+          created_by: string;
+          due_on: string;
+          expected_location_id: string;
+          id: string;
+          note: string;
+          observed_location_id: string | null;
+          owner_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: string;
+          title: string;
+          type: string;
+          version: number;
+        };
+        Insert: {
+          asset_id: string;
+          audit_id?: string | null;
+          created_at?: string;
+          created_by: string;
+          due_on: string;
+          expected_location_id: string;
+          id?: string;
+          note?: string;
+          observed_location_id?: string | null;
+          owner_id: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          title: string;
+          type: string;
+          version?: number;
+        };
+        Update: {
+          asset_id?: string;
+          audit_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          due_on?: string;
+          expected_location_id?: string;
+          id?: string;
+          note?: string;
+          observed_location_id?: string | null;
+          owner_id?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          title?: string;
+          type?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "discrepancies_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "asset_register";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discrepancies_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discrepancies_audit_id_fkey";
+            columns: ["audit_id"];
+            isOneToOne: false;
+            referencedRelation: "audits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discrepancies_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "discrepancies_expected_location_id_fkey";
+            columns: ["expected_location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discrepancies_observed_location_id_fkey";
+            columns: ["observed_location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discrepancies_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "discrepancies_resolved_by_fkey";
+            columns: ["resolved_by"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+        ];
       };
       handovers: {
         Row: {
@@ -364,6 +604,75 @@ export type Database = {
           },
         ];
       };
+      observations: {
+        Row: {
+          asset_id: string;
+          audit_id: string;
+          condition: string;
+          confirmed_serial: string | null;
+          note: string;
+          observed_location_id: string;
+          verified_at: string;
+          verified_by: string;
+        };
+        Insert: {
+          asset_id: string;
+          audit_id: string;
+          condition: string;
+          confirmed_serial?: string | null;
+          note?: string;
+          observed_location_id: string;
+          verified_at?: string;
+          verified_by: string;
+        };
+        Update: {
+          asset_id?: string;
+          audit_id?: string;
+          condition?: string;
+          confirmed_serial?: string | null;
+          note?: string;
+          observed_location_id?: string;
+          verified_at?: string;
+          verified_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "observations_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "asset_register";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "observations_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "observations_audit_id_fkey";
+            columns: ["audit_id"];
+            isOneToOne: false;
+            referencedRelation: "audits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "observations_observed_location_id_fkey";
+            columns: ["observed_location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "observations_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "it_members";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       people: {
         Row: {
           active: boolean;
@@ -492,6 +801,7 @@ export type Database = {
         Args: { p_action: string; p_data: Json; p_request_id: string };
         Returns: Json;
       };
+      inventory_snapshot: { Args: never; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

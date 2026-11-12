@@ -196,7 +196,7 @@ export function Assets({
         condition: asset.condition,
         purchased: asset.purchased,
         warranty: asset.warranty,
-        cost_lkr: asset.cost,
+        cost_lkr: asset.cost ?? "",
         next_verification: asset.nextVerification,
       })),
     );

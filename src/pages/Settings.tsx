@@ -1,18 +1,11 @@
-import { Select } from "../components/Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import {
-  ArrowDownToLine,
-  DatabaseBackup,
-  FolderOpen,
-  Plus,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowDownToLine, FolderOpen, Plus } from "lucide-react";
 import { useInventory } from "../store";
-import { inventorySchema } from "../schema";
-import type { InventoryState, Member } from "../model";
-import { today, uid } from "../model";
+import { useAuth } from "../auth";
 import { download } from "../lib/files";
+import { today } from "../model";
+import { Select } from "../components/Select";
 import {
   ErrorMessage,
   Field,
@@ -23,113 +16,102 @@ import {
 } from "../components/ui";
 
 export function Settings() {
-  const { state, commit, replace, notify } = useInventory();
+  const { state, command, saving } = useInventory();
+  const { member } = useAuth();
+  const admin = member?.role === "IT Admin";
   const [organisation, setOrganisation] = useState(state.settings.organisation);
   const [interval, setInterval] = useState(state.settings.verificationDays);
   const [prefix, setPrefix] = useState(state.settings.paperPrefix);
-  const [member, setMember] = useState<Member | null>(null);
-  const [restoring, setRestoring] = useState<InventoryState | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("IT Officer");
   const [error, setError] = useState("");
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
-    if (!organisation.trim() || !prefix.trim())
-      return setError("Enter an organisation name and paper reference prefix.");
-    commit("Workspace settings saved", organisation.trim(), (draft) => {
-      draft.settings = {
+    await command(
+      "save_settings",
+      {
+        version: state.settings.version || 1,
         organisation: organisation.trim(),
-        verificationDays: interval,
-        paperPrefix: prefix.trim(),
-      };
-    });
+        verification_days: interval,
+        paper_prefix: prefix.trim(),
+      },
+      "Workspace settings saved",
+    );
   }
-  async function readBackup(file?: File) {
-    setError("");
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024)
-      return setError("Choose an EIMTS preview backup smaller than 8 MB.");
-    try {
-      const parsed = inventorySchema.safeParse(JSON.parse(await file.text()));
-      if (!parsed.success)
-        return setError(
-          "This file is not a valid EIMTS preview backup. Its structure, IDs, or inventory references could not be validated.",
-        );
-      setRestoring(parsed.data);
-    } catch {
-      setError(
-        "The backup could not be read. Choose a valid JSON backup exported from this preview.",
-      );
-    }
-  }
-  function saveMember(event: FormEvent) {
+  async function addMember(event: FormEvent) {
     event.preventDefault();
-    if (!member || !member.name.trim())
-      return setError("Enter the IT member’s name.");
+    if (!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(userId.trim()))
+      return setError("Enter the existing Auth user UUID.");
     if (
-      state.members.some(
-        (item) =>
-          item.email.toLowerCase() === member.email.trim().toLowerCase(),
+      await command(
+        "save_it_member",
+        {
+          user_id: userId.trim(),
+          display_name: name.trim(),
+          role,
+          active: true,
+        },
+        "IT access granted",
       )
-    )
-      return setError("This email is already listed.");
-    const clean = {
-      ...member,
-      name: member.name.trim(),
-      email: member.email.trim().toLowerCase(),
-    };
-    commit("IT access draft added", clean.name, (draft) => {
-      draft.members.push(clean);
-    });
-    setMember(null);
+    ) {
+      setAdding(false);
+      setUserId("");
+      setName("");
+    }
   }
   return (
     <>
       <PageHeading
         title="Workspace settings"
-        description="Organisation details, IT access design, and preview data."
+        description="Organisation defaults, IT access, and paper records."
       />
       <div className="settings-layout">
         <Panel title="General" description="Defaults for new records.">
           <form onSubmit={save}>
-            <div className="form-grid">
-              <Field label="Organisation name" full>
-                <input
-                  required
-                  maxLength={80}
-                  value={organisation}
-                  onChange={(event) => setOrganisation(event.target.value)}
-                />
-              </Field>
-              <Field label="Verification interval (days)">
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={interval}
-                  onChange={(event) => setInterval(Number(event.target.value))}
-                />
-              </Field>
-              <Field label="Paper reference prefix">
-                <input
-                  required
-                  maxLength={20}
-                  value={prefix}
-                  onChange={(event) => setPrefix(event.target.value)}
-                />
-              </Field>
-              <p className="field-note full">
-                The interval applies to newly registered or newly verified
-                assets.
-              </p>
-            </div>
-            <div className="form-actions">
-              <button className="button primary">Save settings</button>
-            </div>
+            <fieldset
+              disabled={!admin || saving}
+              style={{ border: 0, padding: 0, margin: 0 }}
+            >
+              <div className="form-grid">
+                <Field label="Organisation name" full>
+                  <input
+                    required
+                    maxLength={80}
+                    value={organisation}
+                    onChange={(e) => setOrganisation(e.target.value)}
+                  />
+                </Field>
+                <Field label="Verification interval (days)">
+                  <input
+                    required
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={interval}
+                    onChange={(e) => setInterval(Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Paper reference prefix">
+                  <input
+                    required
+                    maxLength={20}
+                    value={prefix}
+                    onChange={(e) => setPrefix(e.target.value)}
+                  />
+                </Field>
+              </div>
+              <div className="form-actions">
+                <button className="button primary">Save settings</button>
+              </div>
+            </fieldset>
+            <ErrorMessage error="" />
           </form>
         </Panel>
         <Panel
           title="Paper document workflow"
-          action={<FolderOpen size={19} className="muted" />}
+          action={<FolderOpen size={19} />}
         >
           <div className="settings-copy">
             <p>
@@ -137,47 +119,38 @@ export function Settings() {
               their record screens.
             </p>
             <p>
-              Record the paper form number, cabinet or file location, and
-              whether the signed form has been received.
+              Record the paper reference, filing location, and receipt of the
+              signed form.
             </p>
-            <div className="info-note">
-              Documents are filed physically by IT. These records store the
-              reference and filing location.
-            </div>
           </div>
         </Panel>
       </div>
       <Panel
         title="IT access"
-        description="Account and role design for the database integration step."
+        description="Only active IT members can open this workspace."
         action={
-          <button
-            className="button secondary small"
-            onClick={() => {
-              setMember({ id: uid(), name: "", email: "", role: "IT Officer" });
-              setError("");
-            }}
-          >
-            <Plus size={16} />
-            Add access draft
-          </button>
+          admin ? (
+            <button
+              className="button secondary small"
+              onClick={() => {
+                setAdding(true);
+                setError("");
+              }}
+            >
+              <Plus size={16} />
+              Grant IT access
+            </button>
+          ) : undefined
         }
       >
-        <div className="info-note inset">
-          <ShieldCheck size={20} />
-          <span>
-            IT account drafts are saved locally. IT login, authenticator MFA,
-            account disabling, and enforced permissions will connect with the
-            backend.
-          </span>
-        </div>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
                 <th>IT member</th>
-                <th>Planned role</th>
-                <th>Scope</th>
+                <th>Role</th>
+                <th>Status</th>
+                {admin && <th>Access</th>}
               </tr>
             </thead>
             <tbody>
@@ -185,14 +158,37 @@ export function Settings() {
                 <tr key={item.id}>
                   <td>
                     <strong>{item.name}</strong>
-                    <small className="cell-secondary">{item.email}</small>
+                    {item.email && (
+                      <small className="cell-secondary">{item.email}</small>
+                    )}
                   </td>
                   <td>{item.role}</td>
-                  <td>
-                    {item.role === "IT Admin"
-                      ? "Inventory, verification, IT accounts, and settings"
-                      : "Inventory, custody, verification, and reports"}
-                  </td>
+                  <td>{item.active ? "Active" : "Disabled"}</td>
+                  {admin && (
+                    <td>
+                      <button
+                        className="button secondary small"
+                        disabled={saving}
+                        onClick={() =>
+                          void command(
+                            "save_it_member",
+                            {
+                              user_id: item.id,
+                              display_name: item.name,
+                              role: item.role,
+                              active: !item.active,
+                              version: item.version || 1,
+                            },
+                            item.active
+                              ? "IT access disabled"
+                              : "IT access enabled",
+                          )
+                        }
+                      >
+                        {item.active ? "Disable" : "Enable"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -200,87 +196,50 @@ export function Settings() {
         </div>
       </Panel>
       <Panel
-        title="Preview backup & recovery"
-        description="Export and restore the data saved in this browser."
-        action={<DatabaseBackup size={20} className="muted" />}
+        title="Data export"
+        description="Download a JSON copy of the currently loaded inventory."
       >
         <div className="settings-copy">
-          <p>
-            Download a complete JSON snapshot of this browser workspace. CSV
-            reports are available for individual modules.
-          </p>
-          <div className="row-actions wrap">
-            <button
-              className="button secondary"
-              onClick={() =>
-                download(
-                  `eimts-preview-${today()}.json`,
-                  JSON.stringify(state, null, 2),
-                  "application/json",
-                )
-              }
-            >
-              <ArrowDownToLine size={17} />
-              Export preview backup
-            </button>
-            <label className="button secondary file-button">
-              <DatabaseBackup size={17} />
-              Choose backup to restore
-              <input
-                type="file"
-                accept="application/json,.json"
-                onChange={(event) => {
-                  void readBackup(event.target.files?.[0]);
-                  event.target.value = "";
-                }}
-              />
-            </label>
-          </div>
-          <p className="field-note">
-            Scheduled encrypted database backups and restore verification belong
-            to the backend step.
-          </p>
-          <ErrorMessage error={error} />
+          <button
+            className="button secondary"
+            onClick={() =>
+              download(
+                `eimts-inventory-${today()}.json`,
+                JSON.stringify(state, null, 2),
+                "application/json",
+              )
+            }
+          >
+            <ArrowDownToLine size={17} />
+            Export inventory
+          </button>
         </div>
       </Panel>
-      {member && (
+      {adding && (
         <Modal
-          title="Draft an IT account"
-          description="This saves the planned account locally for review."
-          onClose={() => setMember(null)}
+          title="Grant IT access"
+          description="Create the account in Supabase Authentication first, then use its user ID here."
+          onClose={() => setAdding(false)}
         >
-          <form onSubmit={saveMember}>
+          <form onSubmit={addMember}>
             <div className="form-grid">
-              <Field label="Name" full>
+              <Field label="Auth user ID" full>
+                <input
+                  required
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                />
+              </Field>
+              <Field label="Display name" full>
                 <input
                   required
                   maxLength={100}
-                  value={member.name}
-                  onChange={(event) =>
-                    setMember({ ...member, name: event.target.value })
-                  }
-                />
-              </Field>
-              <Field label="Work email" full>
-                <input
-                  required
-                  type="email"
-                  value={member.email}
-                  onChange={(event) =>
-                    setMember({ ...member, email: event.target.value })
-                  }
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </Field>
               <Field label="IT role" full>
-                <Select
-                  value={member.role}
-                  onValueChange={(event) =>
-                    setMember({
-                      ...member,
-                      role: event as Member["role"],
-                    })
-                  }
-                >
+                <Select value={role} onValueChange={setRole}>
                   <option>IT Officer</option>
                   <option>IT Admin</option>
                 </Select>
@@ -288,45 +247,10 @@ export function Settings() {
             </div>
             <ErrorMessage error={error} />
             <FormActions
-              onClose={() => setMember(null)}
-              label="Save access draft"
+              onClose={() => setAdding(false)}
+              label="Grant access"
             />
           </form>
-        </Modal>
-      )}
-      {restoring && (
-        <Modal
-          title="Restore this preview backup?"
-          onClose={() => setRestoring(null)}
-        >
-          <div className="modal-body">
-            <p>
-              The chosen backup contains {restoring.assets.length} assets and{" "}
-              {restoring.people.length} employee records. Restoring replaces the
-              preview data currently in this browser.
-            </p>
-          </div>
-          <div className="form-actions">
-            <button
-              className="button secondary"
-              onClick={() => setRestoring(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="button primary"
-              onClick={() => {
-                replace(restoring);
-                setOrganisation(restoring.settings.organisation);
-                setInterval(restoring.settings.verificationDays);
-                setPrefix(restoring.settings.paperPrefix);
-                setRestoring(null);
-                notify("Preview backup restored");
-              }}
-            >
-              Restore backup
-            </button>
-          </div>
         </Modal>
       )}
     </>

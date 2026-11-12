@@ -21,17 +21,17 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useInventory } from "./store";
+import { InventoryProvider, useInventory } from "./store";
 import { verificationDue } from "./model";
 import { AssetDialogs } from "./components/AssetDialogs";
 import type { AssetDialog } from "./components/AssetDialogs";
-import { Modal } from "./components/ui";
+import { Modal, PageHeading, Empty } from "./components/ui";
+import { useAuth } from "./auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Assets } from "./pages/Assets";
 import { Custody } from "./pages/Custody";
 import { Verification } from "./pages/Verification";
-import { Issues, Maintenance } from "./pages/Operations";
-import { Consumables } from "./pages/Consumables";
+import { Issues } from "./pages/Operations";
 import { Organisation } from "./pages/Organisation";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
@@ -75,8 +75,21 @@ function getRoute() {
   return route.split("?")[0] in titles ? route : "overview";
 }
 
-export default function Workspace({ onLogout }: { onLogout: () => void }) {
-  const { state, notice, storageError } = useInventory();
+export default function ConnectedWorkspace({
+  onLogout,
+}: {
+  onLogout: () => void;
+}) {
+  return (
+    <InventoryProvider>
+      <Workspace onLogout={onLogout} />
+    </InventoryProvider>
+  );
+}
+
+function Workspace({ onLogout }: { onLogout: () => void }) {
+  const { state, notice, storageError, refresh, saving } = useInventory();
+  const { member } = useAuth();
   const [route, setRoute] = useState(getRoute);
   const page = route.split("?")[0];
   const parameters = new URLSearchParams(route.split("?")[1] || "");
@@ -240,8 +253,8 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
             <div className="sidebar-profile">
               <span className="avatar profile">IT</span>
               <span>
-                <strong>IT Administrator</strong>
-                <small>Workspace admin</small>
+                <strong>{member?.display_name}</strong>
+                <small>{member?.role}</small>
               </span>
               <ShieldCheck size={16} />
             </div>
@@ -332,8 +345,8 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
                 </button>
                 {profile && (
                   <div className="popover">
-                    <strong>IT Administrator</strong>
-                    <p>Sample IT Admin account</p>
+                    <strong>{member?.display_name}</strong>
+                    <p>Approved IT account</p>
                     <button onClick={onLogout}>Sign out</button>
                     <button onClick={() => navigate("settings")}>
                       <SettingsIcon size={17} />
@@ -347,11 +360,17 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
           <div className="preview-banner">
             <span>
               <i />
-              Frontend preview
+              Connected to Supabase
               <span className="preview-detail">
-                Records saved in this browser
+                Inventory shared with the IT department
               </span>
             </span>
+            <button
+              disabled={saving}
+              onClick={() => void refresh().catch(() => {})}
+            >
+              Reload inventory
+            </button>
             <button onClick={() => setHelp(true)}>
               About this workspace
               <ChevronRight size={13} />
@@ -360,6 +379,13 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
           {storageError && (
             <p className="storage-error" role="alert">
               {storageError}
+              <button
+                className="text-link"
+                disabled={saving}
+                onClick={() => void refresh().catch(() => {})}
+              >
+                Reload inventory
+              </button>
             </p>
           )}
           <main id="main-content" key={route}>
@@ -376,8 +402,30 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
             {page === "custody" && <Custody onOpen={onOpen} />}
             {page === "verification" && <Verification onOpen={onOpen} />}
             {page === "issues" && <Issues onOpen={onOpen} />}
-            {page === "maintenance" && <Maintenance onOpen={onOpen} />}
-            {page === "consumables" && <Consumables />}
+            {page === "maintenance" && (
+              <>
+                <PageHeading
+                  title="Maintenance"
+                  description="Service history and repair outcomes."
+                />
+                <Empty
+                  title="Database integration pending"
+                  description="Repair tracking will be connected in the next backend milestone."
+                />
+              </>
+            )}
+            {page === "consumables" && (
+              <>
+                <PageHeading
+                  title="Consumables"
+                  description="Stock receipts, issues, and reorder levels."
+                />
+                <Empty
+                  title="Database integration pending"
+                  description="Stock movements will be connected in the next backend milestone."
+                />
+              </>
+            )}
             {page === "organisation" && <Organisation />}
             {page === "reports" && (
               <Reports initialReport={parameters.get("report") || "custody"} />
@@ -396,11 +444,11 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
         />
       )}
       {help && (
-        <Modal title="Your frontend workspace" onClose={() => setHelp(false)}>
+        <Modal title="Your IT workspace" onClose={() => setHelp(false)}>
           <div className="modal-body">
             <p>
-              This workspace starts empty. Add branches, locations, and people
-              before registering assets. Changes are saved on this device.
+              Add locations and employees before registering assets. Inventory
+              changes are saved to Supabase for approved IT members.
             </p>
             <div className="help-steps">
               <p>
@@ -424,8 +472,9 @@ export default function Workspace({ onLogout }: { onLogout: () => void }) {
               </p>
             </div>
             <div className="info-note">
-              Shared records, IT authentication, MFA, enforced permissions, and
-              scheduled backups are part of the database integration step.
+              IT access is checked against active membership. Maintenance,
+              consumable stock, MFA, and database backup operations follow in
+              later milestones.
             </div>
             <p>
               Paper forms are tracked by reference number and filing location.

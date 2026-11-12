@@ -1,89 +1,143 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
+import type { Json } from "../supabase/database.types";
 import type { InventoryState } from "./model";
-import { now, officerName, uid } from "./model";
 import { createEmptyWorkspace } from "./emptyWorkspace";
-import { inventorySchema } from "./schema";
+import { loadInventory, readableError, sendCommand } from "./lib/inventory";
+import { useAuth } from "./auth";
 
-// A new key prevents fictional records reappearing in returning browsers.
-// Keep the legacy key untouched so manually entered preview data remains recoverable.
-const storageKey = "eimts-inventory-empty-v1";
 interface Store {
   state: InventoryState;
+  command: (action: string, payload: Json, message: string) => Promise<boolean>;
+  saving: boolean;
+  refresh: () => Promise<void>;
+  // Older maintenance/stock forms stay unavailable until their database milestone.
   commit: (
     action: string,
     subject: string,
     mutate: (draft: InventoryState) => void,
   ) => void;
-  replace: (state: InventoryState) => void;
   notify: (message: string) => void;
   notice: string;
   storageError: string;
 }
 const InventoryContext = createContext<Store | null>(null);
-
-function load(): InventoryState {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const parsed = inventorySchema.safeParse(JSON.parse(saved));
-      if (parsed.success) return parsed.data;
-    }
-  } catch {
-    /* An unavailable browser store opens an empty workspace. */
-  }
-  return createEmptyWorkspace();
-}
-
 export function InventoryProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState(load);
+  const { session } = useAuth();
+  const [state, setState] = useState(createEmptyWorkspace);
+  const [loading, setLoading] = useState(true);
+  const [storageError, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [storageError, setStorageError] = useState("");
-  useEffect(() => {
+  const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
+  const retry = useRef<{ action: string; payload: string; id: string } | null>(
+    null,
+  );
+  const email = session?.user.email || "";
+  const userId = session?.user.id || "";
+  const refresh = useCallback(async () => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(state));
-      setStorageError("");
-    } catch {
-      setStorageError(
-        "Browser storage is unavailable. Export your preview data before closing this page.",
-      );
+      setState(await loadInventory(email, userId));
+      setError("");
+    } catch (error) {
+      setError(readableError(error));
+      throw error;
     }
-  }, [state]);
+  }, [email, userId]);
   useEffect(() => {
-    if (notice) {
-      const timer = window.setTimeout(() => setNotice(""), 4500);
-      return () => window.clearTimeout(timer);
-    }
-  }, [notice]);
-  function commit(
-    action: string,
-    subject: string,
-    mutate: (draft: InventoryState) => void,
-  ) {
-    const entry = {
-      id: uid(),
-      date: now(),
-      action,
-      subject,
-      officer: officerName,
+    let cancelled = false;
+    void loadInventory(email, userId)
+      .then((next) => {
+        if (!cancelled) {
+          setState(next);
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setError(readableError(error));
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
     };
-    setState((previous) => {
-      const draft = structuredClone(previous);
-      mutate(draft);
-      draft.activity.unshift(entry);
-      return draft;
-    });
-    setNotice(action);
+  }, [email, userId]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 4500);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+  async function command(action: string, payload: Json, message: string) {
+    if (busy.current) return false;
+    busy.current = true;
+    setSaving(true);
+    setError("");
+    const serialized = JSON.stringify(payload);
+    if (
+      retry.current?.action !== action ||
+      retry.current.payload !== serialized
+    )
+      retry.current = { action, payload: serialized, id: crypto.randomUUID() };
+    try {
+      await sendCommand(retry.current.id, action, payload);
+      // Render authoritative server state only after the entire command commits.
+      await refresh();
+      retry.current = null;
+      setNotice(message);
+      return true;
+    } catch (error) {
+      setError(readableError(error));
+      return false;
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
   }
+  if (loading)
+    return (
+      <div className="workspace-loading" role="status">
+        Loading inventory…
+      </div>
+    );
+  if (storageError && state.settings.version === undefined)
+    return (
+      <div className="workspace-loading" role="alert">
+        <div>
+          <p>{storageError}</p>
+          <button
+            className="button primary"
+            onClick={() => {
+              setLoading(true);
+              void refresh()
+                .finally(() => setLoading(false))
+                .catch((error) => setError(readableError(error)));
+            }}
+          >
+            Retry connection
+          </button>
+        </div>
+      </div>
+    );
   return (
     <InventoryContext.Provider
       value={{
         state,
-        commit,
-        replace: setState,
-        notify: setNotice,
+        command,
+        saving,
+        refresh,
         notice,
         storageError,
+        notify: setNotice,
+        commit: () =>
+          setError("This module is awaiting its database integration."),
       }}
     >
       {children}

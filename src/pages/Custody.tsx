@@ -17,32 +17,30 @@ import {
 import type { AssetDialog } from "../components/AssetDialogs";
 
 export function Custody({ onOpen }: { onOpen: (dialog: AssetDialog) => void }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const [tab, setTab] = useState("Current assignments");
   const [search, setSearch] = useState("");
   const [paper, setPaper] = useState<Handover | null>(null);
   const [error, setError] = useState("");
-  function savePaper(event: FormEvent) {
+  async function savePaper(event: FormEvent) {
     event.preventDefault();
+    if (!paper) return;
+    if (paper.received && !paper.filing.trim())
+      return setError("Record the signed form filing location.");
     if (
-      !paper ||
-      !paper.reference.trim() ||
-      (paper.received && !paper.filing.trim())
+      await command(
+        "record_signed_form",
+        {
+          handover_id: paper.id,
+          version: paper.version || 1,
+          signed_received: paper.received,
+          paper_reference: paper.reference.trim(),
+          filing_location: paper.filing.trim(),
+        },
+        "Paper record updated",
+      )
     )
-      return setError(
-        "Enter the form reference and the filing location for a received signed form.",
-      );
-    commit(
-      "Paper record updated",
-      `${state.assets.find((asset) => asset.id === paper.assetId)?.tag} · ${paper.reference.trim()}`,
-      (draft) => {
-        const record = draft.handovers.find((item) => item.id === paper.id)!;
-        record.reference = paper.reference.trim();
-        record.filing = paper.filing.trim();
-        record.received = paper.received;
-      },
-    );
-    setPaper(null);
+      setPaper(null);
   }
   const filtered = state.handovers.filter(
     (item) =>

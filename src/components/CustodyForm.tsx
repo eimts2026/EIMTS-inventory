@@ -2,7 +2,8 @@ import { Select } from "./Select";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type { Condition } from "../model";
-import { now, officerName, today, uid } from "../model";
+import { assetPayload } from "../lib/inventory";
+import { today } from "../model";
 import { useInventory } from "../store";
 import { ErrorMessage, Field, FormActions, Modal } from "./ui";
 import type { AssetDialog } from "./AssetDialogs";
@@ -14,7 +15,7 @@ export function CustodyForm({
   dialog: Extract<AssetDialog, { kind: "issue" | "return" | "transfer" }>;
   onClose: () => void;
 }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const existing = state.handovers.find((item) => item.id === dialog.id);
   const [assetId, setAssetId] = useState(
     dialog.kind === "return" ? existing?.assetId || "" : dialog.id || "",
@@ -44,81 +45,57 @@ export function CustodyForm({
     return: "Record an asset return",
     transfer: "Transfer an asset",
   }[dialog.kind];
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
     if (!asset) return setError("Select an asset.");
-    if (dialog.kind === "issue" && asset.status !== "Available")
-      return setError("Select an available asset.");
-    if (dialog.kind === "return" && (!existing || existing.returnedAt))
-      return setError("This handover has already been returned.");
-    if (
-      dialog.kind === "transfer" &&
-      asset.status !== "Assigned" &&
-      asset.status !== "Available"
-    )
-      return setError("This asset cannot be transferred in its current state.");
-    if (
-      dialog.kind === "transfer" &&
-      asset.locationId === locationId &&
-      asset.personId === personId
-    )
-      return setError("Choose a different location or custodian.");
-    if (dialog.kind === "issue" && !personId)
-      return setError("Select the employee receiving this asset.");
-    if (dueAt && dueAt < today())
-      return setError("Expected return must be today or later.");
-    if (!reference.trim()) return setError("Enter the paper form reference.");
-    if (received && !filing.trim())
-      return setError("Record the filing location for the signed form.");
-    const entryId = uid();
-    commit(
-      {
-        issue: "Asset issued",
-        return: "Asset returned",
-        transfer: "Asset transferred",
-      }[dialog.kind],
-      `${asset.tag} · ${reference.trim()}`,
-      (draft) => {
-        const target = draft.assets.find((item) => item.id === assetId)!;
-        target.locationId = locationId;
-        if (dialog.kind === "return") {
-          const handover = draft.handovers.find(
-            (item) => item.id === dialog.id,
-          )!;
-          handover.returnedAt = now();
-          handover.returnCondition = condition;
-          handover.returnReference = reference.trim();
-          handover.returnFiling = filing.trim();
-          target.personId = "";
-          target.status =
-            condition === "Damaged" ? "Needs service" : "Available";
-          target.condition = condition;
-        } else {
-          const active = draft.handovers.find(
-            (item) => item.assetId === assetId && !item.returnedAt,
-          );
-          if (active) active.returnedAt = now();
-          target.personId = personId;
-          target.status = personId ? "Assigned" : "Available";
-          draft.handovers.unshift({
-            id: entryId,
-            assetId,
-            personId,
-            issuedAt: now(),
-            returnedAt: personId ? "" : now(),
-            dueAt,
-            accessories,
-            condition: target.condition,
-            reference: reference.trim(),
-            filing: filing.trim(),
-            received,
-            officer: officerName,
-            locationId,
-          });
-        }
-      },
+    const active = state.handovers.find(
+      (item) => item.assetId === asset.id && !item.returnedAt,
     );
-    onClose();
+    if (
+      dialog.kind === "transfer" &&
+      !personId &&
+      asset.status === "Available"
+    ) {
+      if (
+        await command(
+          "save_asset",
+          assetPayload({ ...asset, locationId }),
+          "Asset location updated",
+        )
+      )
+        onClose();
+      return;
+    }
+    const kind =
+      dialog.kind === "transfer"
+        ? !personId
+          ? "return"
+          : asset.status === "Available"
+            ? "issue"
+            : "transfer"
+        : dialog.kind;
+    if (kind !== "return" && !personId)
+      return setError("Select the receiving employee.");
+    if (received && !filing.trim())
+      return setError("Record the signed form filing location.");
+    const payload = {
+      asset_id: asset.id,
+      asset_version: asset.version || 1,
+      person_id: personId,
+      location_id: locationId,
+      condition: kind === "return" ? condition : asset.condition,
+      paper_reference: reference.trim(),
+      return_reference: reference.trim(),
+      return_filing: filing.trim(),
+      handover_id:
+        (dialog.kind === "return" ? existing?.id : active?.id) || null,
+      due_on: dueAt || null,
+      accessories,
+      filing_location: filing.trim(),
+      signed_received: received,
+    };
+    if (await command(kind + "_asset", payload, "Custody record saved"))
+      onClose();
   }
   return (
     <Modal

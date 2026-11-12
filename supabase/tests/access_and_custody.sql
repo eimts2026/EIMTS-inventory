@@ -108,10 +108,12 @@ begin
   exception when insufficient_privilege then null; end;
 
   perform set_config('request.jwt.claims', jsonb_build_object('sub', f.admin_id, 'role', 'authenticated')::text, true);
+  if (select count(*) from public.it_members where active and role='IT Admin')=1 then
   begin
     perform public.inventory_command(gen_random_uuid(), 'save_it_member', jsonb_build_object('user_id', f.admin_id, 'display_name', 'Test administrator', 'role', 'IT Admin', 'active', false, 'version', 1));
     raise exception 'Last active administrator was disabled';
   exception when invalid_parameter_value then null; end;
+  end if;
   perform public.inventory_command(gen_random_uuid(), 'save_it_member', jsonb_build_object('user_id', f.officer_id, 'display_name', 'Test officer', 'role', 'IT Officer', 'active', false, 'version', 1));
   perform set_config('request.jwt.claims', jsonb_build_object('sub', f.officer_id, 'role', 'authenticated')::text, true);
   if exists (select 1 from public.assets) then raise exception 'Disabled officer still has read access'; end if;

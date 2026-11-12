@@ -4,6 +4,7 @@ export type Condition = "Good" | "Fair" | "Damaged";
 export type Category =
   "Laptop" | "Desktop" | "Monitor" | "Printer" | "Network" | "Other";
 export interface Asset {
+  version?: number;
   id: string;
   tag: string;
   name: string;
@@ -15,11 +16,12 @@ export interface Asset {
   condition: Condition;
   purchased: string;
   warranty: string;
-  cost: number;
+  cost: number | null;
   nextVerification: string;
   lastVerified: string;
 }
 export interface Person {
+  version?: number;
   id: string;
   name: string;
   employeeId: string;
@@ -27,11 +29,14 @@ export interface Person {
   locationId: string;
 }
 export interface Location {
+  version?: number;
+  branchId?: string;
   id: string;
   name: string;
   branch: string;
 }
 export interface Handover {
+  version?: number;
   id: string;
   assetId: string;
   personId: string;
@@ -50,6 +55,8 @@ export interface Handover {
   returnFiling?: string;
 }
 export interface Observation {
+  expectedSerial?: string;
+  expectedTag?: string;
   assetId: string;
   expectedLocationId: string;
   expectedPersonId: string;
@@ -60,6 +67,7 @@ export interface Observation {
   note: string;
 }
 export interface Audit {
+  version?: number;
   id: string;
   name: string;
   locationId: string;
@@ -69,6 +77,8 @@ export interface Audit {
   observations: Observation[];
 }
 export interface Issue {
+  version?: number;
+  ownerId?: string;
   id: string;
   assetId: string;
   auditId: string;
@@ -116,6 +126,8 @@ export interface Activity {
   officer: string;
 }
 export interface Member {
+  version?: number;
+  active?: boolean;
   id: string;
   name: string;
   email: string;
@@ -134,6 +146,7 @@ export interface InventoryState {
   activity: Activity[];
   members: Member[];
   settings: {
+    version?: number;
     organisation: string;
     verificationDays: number;
     paperPrefix: string;
@@ -158,7 +171,8 @@ export function dateLabel(value: string) {
       }).format(new Date(value.length === 10 ? `${value}T12:00:00Z` : value))
     : "—";
 }
-export function currency(value: number) {
+export function currency(value: number | null) {
+  if (value === null) return "Unknown";
   return `LKR ${new Intl.NumberFormat("en-LK").format(value)}`;
 }
 export function verificationDue(asset: Asset) {

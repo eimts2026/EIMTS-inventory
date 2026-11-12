@@ -17,7 +17,7 @@ import {
 } from "../components/ui";
 
 export function Organisation() {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const [tab, setTab] = useState("People");
   const [search, setSearch] = useState("");
   const [person, setPerson] = useState<Person | null>(null);
@@ -28,61 +28,43 @@ export function Organisation() {
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
-  function savePerson(event: FormEvent) {
+  async function savePerson(event: FormEvent) {
     event.preventDefault();
+    if (!person) return;
     if (
-      !person ||
-      !person.name.trim() ||
-      !person.employeeId.trim() ||
-      !person.department.trim()
-    )
-      return setError("Enter a name, employee ID, and department.");
-    if (
-      state.people.some(
-        (item) =>
-          item.id !== person.id &&
-          item.employeeId.toLowerCase() ===
-            person.employeeId.trim().toLowerCase(),
+      await command(
+        "save_person",
+        {
+          id: person.id,
+          name: person.name.trim(),
+          employee_id: person.employeeId.trim(),
+          department: person.department.trim(),
+          location_id: person.locationId,
+          active: true,
+          ...(person.version ? { version: person.version } : {}),
+        },
+        "Employee record saved",
       )
     )
-      return setError("This employee ID is already registered.");
-    const clean = {
-      ...person,
-      name: person.name.trim(),
-      employeeId: person.employeeId.trim(),
-      department: person.department.trim(),
-    };
-    commit("Employee record saved", clean.name, (draft) => {
-      const index = draft.people.findIndex((item) => item.id === clean.id);
-      if (index < 0) draft.people.push(clean);
-      else draft.people[index] = clean;
-    });
-    setPerson(null);
+      setPerson(null);
   }
-  function saveLocation(event: FormEvent) {
+  async function saveLocation(event: FormEvent) {
     event.preventDefault();
-    if (!location || !location.name.trim() || !location.branch.trim())
-      return setError("Enter the branch and room or office name.");
+    if (!location) return;
     if (
-      state.locations.some(
-        (item) =>
-          item.id !== location.id &&
-          `${item.branch}/${item.name}`.toLowerCase() ===
-            `${location.branch.trim()}/${location.name.trim()}`.toLowerCase(),
+      await command(
+        "save_location",
+        {
+          id: location.id,
+          name: location.name.trim(),
+          branch_name: location.branch.trim(),
+          active: true,
+          ...(location.version ? { version: location.version } : {}),
+        },
+        "Location saved",
       )
     )
-      return setError("This branch and location already exist.");
-    const clean = {
-      ...location,
-      name: location.name.trim(),
-      branch: location.branch.trim(),
-    };
-    commit("Location saved", `${clean.branch} / ${clean.name}`, (draft) => {
-      const index = draft.locations.findIndex((item) => item.id === clean.id);
-      if (index < 0) draft.locations.push(clean);
-      else draft.locations[index] = clean;
-    });
-    setLocation(null);
+      setLocation(null);
   }
   return (
     <>

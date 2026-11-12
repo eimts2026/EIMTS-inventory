@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import type { Category } from "../model";
+import { useInventory } from "../store";
 
 export function IconForAsset({
   category,
@@ -236,12 +237,17 @@ export function FormActions({
   label?: string;
   disabled?: boolean;
 }) {
+  const { saving } = useInventory();
   return (
     <div className="form-actions">
       <button type="button" className="button secondary" onClick={onClose}>
         Cancel
       </button>
-      <button className="button primary" type="submit" disabled={disabled}>
+      <button
+        className="button primary"
+        type="submit"
+        disabled={disabled || saving}
+      >
         <Check size={16} />
         {label}
       </button>
@@ -265,9 +271,11 @@ export function Field({
   );
 }
 export function ErrorMessage({ error }: { error: string }) {
-  return error ? (
+  const { storageError } = useInventory();
+  const message = error || storageError;
+  return message ? (
     <p className="form-error" role="alert">
-      {error}
+      {message}
     </p>
   ) : null;
 }

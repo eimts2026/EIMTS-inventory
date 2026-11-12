@@ -12,16 +12,8 @@ import {
   X,
 } from "lucide-react";
 import type { IScannerControls } from "@zxing/browser";
-import type { Asset, Condition, Observation } from "../model";
-import {
-  dateLabel,
-  now,
-  officerName,
-  relativeDay,
-  today,
-  uid,
-  verificationDue,
-} from "../model";
+import type { Asset, Condition } from "../model";
+import { dateLabel, relativeDay, today, uid, verificationDue } from "../model";
 import { useInventory } from "../store";
 import {
   Badge,
@@ -101,11 +93,12 @@ export function Verification({
 }: {
   onOpen: (dialog: AssetDialog) => void;
 }) {
-  const { state, commit, notify } = useInventory();
+  const { state, command } = useInventory();
   const [selected, setSelected] = useState(
     state.audits.find((audit) => !audit.closedAt)?.id || "",
   );
   const [creating, setCreating] = useState(false);
+  const pendingAuditId = useRef(uid());
   const [closing, setClosing] = useState(false);
   const [name, setName] = useState("");
   const [locationId, setLocationId] = useState(state.locations[0]?.id || "");
@@ -123,38 +116,22 @@ export function Verification({
     audit?.observations.filter((item) => item.verifiedAt).length || 0;
   const outstanding =
     audit?.observations.filter((item) => !item.verifiedAt) || [];
-  function create(event: FormEvent) {
+  async function create(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) return setError("Enter a verification name.");
-    const expected = state.assets.filter(
-      (asset) => asset.locationId === locationId && asset.status !== "Retired",
-    );
-    if (!expected.length)
-      return setError("This location has no active assets to verify.");
-    const id = uid();
-    commit("Verification started", name.trim(), (draft) => {
-      draft.audits.unshift({
-        id,
-        name: name.trim(),
-        locationId,
-        dueAt,
-        createdAt: now(),
-        closedAt: "",
-        observations: expected.map((asset) => ({
-          assetId: asset.id,
-          expectedLocationId: asset.locationId,
-          expectedPersonId: asset.personId,
-          observedLocationId: "",
-          condition: asset.condition,
-          verifiedAt: "",
-          verifier: "",
-          note: "",
-        })),
-      });
-    });
-    setSelected(id);
-    setCreating(false);
-    setName("");
+    const id = pendingAuditId.current;
+    if (
+      await command(
+        "start_audit",
+        { id, name: name.trim(), location_id: locationId, due_on: dueAt },
+        "Verification started",
+      )
+    ) {
+      setSelected(id);
+      pendingAuditId.current = uid();
+      setCreating(false);
+      setName("");
+    }
   }
   function lookup(value = tag) {
     setError("");
@@ -179,100 +156,40 @@ export function Verification({
     setObservedLocation(audit?.locationId || asset.locationId);
     setNote("");
   }
-  function verify(event: FormEvent) {
+  async function verify(event: FormEvent) {
     event.preventDefault();
     if (!found || !audit || audit.closedAt) return;
-    if (serial.trim().toLowerCase() !== found.serial.toLowerCase())
-      return setError(
-        "The serial does not match the register. Check the physical device and raise a discrepancy if necessary.",
-      );
-    const snapshot = audit.observations.find(
-      (item) => item.assetId === found.id,
-    );
-    const expected = snapshot?.expectedLocationId || found.locationId;
-    const mismatch = expected !== observedLocation || !snapshot;
-    const needsIssue = mismatch || condition === "Damaged";
-    const issueId = uid();
-    const observation: Observation = {
-      assetId: found.id,
-      expectedLocationId: expected,
-      expectedPersonId: snapshot?.expectedPersonId || found.personId,
-      observedLocationId: observedLocation,
-      condition,
-      verifiedAt: now(),
-      verifier: officerName,
-      note: note.trim(),
-    };
-    commit(
-      "Physical verification recorded",
-      `${found.tag} · ${audit.name}`,
-      (draft) => {
-        const target = draft.audits.find((item) => item.id === audit.id)!;
-        const index = target.observations.findIndex(
-          (item) => item.assetId === found.id,
-        );
-        if (index >= 0) target.observations[index] = observation;
-        else target.observations.push(observation);
-        const asset = draft.assets.find((item) => item.id === found.id)!;
-        asset.lastVerified = today();
-        asset.condition = condition;
-        if (asset.status === "Available" || asset.status === "Needs service") {
-          asset.status =
-            condition === "Damaged" ? "Needs service" : "Available";
-        }
-        asset.nextVerification = relativeDay(draft.settings.verificationDays);
-        if (needsIssue)
-          draft.issues.unshift({
-            id: issueId,
-            assetId: found.id,
-            auditId: audit.id,
-            title: mismatch
-              ? "Observed location differs from the audit record"
-              : "Damage found during verification",
-            type: mismatch ? "Location mismatch" : "Damage",
-            owner: officerName,
-            dueAt: relativeDay(7),
-            status: "Open",
-            note: note.trim(),
-            expectedLocationId: expected,
-            observedLocationId: observedLocation,
-            resolvedAt: "",
-          });
-      },
-    );
-    setFound(null);
-    setTag("");
-    setError("");
-    if (needsIssue) notify("Verification recorded and discrepancy opened");
+    if (
+      await command(
+        "record_observation",
+        {
+          audit_id: audit.id,
+          asset_id: found.id,
+          observed_location_id: observedLocation,
+          condition,
+          confirmed_serial: serial.trim(),
+          note: note.trim(),
+        },
+        "Physical verification recorded",
+      )
+    ) {
+      setFound(null);
+      setTag("");
+      setError("");
+    }
   }
-  function closeAudit() {
+  async function closeAudit() {
     if (!audit) return;
-    const missingIds = outstanding.map((item) => ({ ...item, issueId: uid() }));
-    commit(
-      "Verification closed",
-      `${audit.name} · ${missingIds.length} unseen assets`,
-      (draft) => {
-        draft.audits.find((item) => item.id === audit.id)!.closedAt = now();
-        missingIds.forEach((item) => {
-          draft.issues.unshift({
-            id: item.issueId,
-            assetId: item.assetId,
-            auditId: audit.id,
-            title: "Asset unseen when verification closed",
-            type: "Not seen",
-            owner: officerName,
-            dueAt: relativeDay(7),
-            status: "Open",
-            note: "Follow up on the physical device and recorded custodian.",
-            expectedLocationId: item.expectedLocationId,
-            observedLocationId: "",
-            resolvedAt: "",
-          });
-        });
-      },
-    );
-    setClosing(false);
-    setFound(null);
+    if (
+      await command(
+        "close_audit",
+        { audit_id: audit.id },
+        "Verification closed",
+      )
+    ) {
+      setClosing(false);
+      setFound(null);
+    }
   }
   return (
     <>
@@ -393,7 +310,11 @@ export function Verification({
                       <Field label="Serial number on the physical device" full>
                         <input
                           autoFocus
-                          required
+                          required={Boolean(
+                            audit.observations.find(
+                              (item) => item.assetId === found.id,
+                            )?.expectedSerial ?? found.serial,
+                          )}
                           value={serial}
                           onChange={(event) => setSerial(event.target.value)}
                           placeholder="Type the serial to confirm this device"

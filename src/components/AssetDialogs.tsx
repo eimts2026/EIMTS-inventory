@@ -1,3 +1,4 @@
+import { assetPayload } from "../lib/inventory";
 import { Select } from "./Select";
 import { CustodyForm } from "./CustodyForm";
 import { PaperPreview } from "./PaperPreview";
@@ -73,7 +74,7 @@ export function AssetDialogs({
 }
 
 function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const existing = state.assets.find((asset) => asset.id === id);
   const nextNumber =
     Math.max(
@@ -93,9 +94,9 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
       locationId: state.locations[0]?.id || "",
       personId: "",
       condition: "Good",
-      purchased: today(),
+      purchased: "",
       warranty: "",
-      cost: 0,
+      cost: null,
       nextVerification: relativeDay(state.settings.verificationDays),
       lastVerified: "",
     },
@@ -103,41 +104,18 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
   const [error, setError] = useState("");
   const update = <K extends keyof Asset>(key: K, value: Asset[K]) =>
     setAsset((previous) => ({ ...previous, [key]: value }));
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
-    const cleaned = {
-      ...asset,
-      tag: asset.tag.trim().toUpperCase(),
-      serial: asset.serial.trim(),
-      name: asset.name.trim(),
-    };
-    if (cleaned.status === "Available" || cleaned.status === "Needs service")
-      cleaned.status =
-        cleaned.condition === "Damaged" ? "Needs service" : "Available";
-    if (!cleaned.name || !cleaned.tag || !cleaned.serial)
-      return setError("Enter an asset name, asset tag, and serial number.");
+    if (!asset.name.trim() || !asset.tag.trim())
+      return setError("Enter an asset name and tag.");
     if (
-      state.assets.some(
-        (item) =>
-          item.id !== id &&
-          (item.tag.toLowerCase() === cleaned.tag.toLowerCase() ||
-            item.serial.toLowerCase() === cleaned.serial.toLowerCase()),
+      await command(
+        "save_asset",
+        assetPayload(asset),
+        existing ? "Asset updated" : "Asset registered",
       )
     )
-      return setError("This asset tag or serial number is already registered.");
-    if (cleaned.warranty && cleaned.warranty < cleaned.purchased)
-      return setError("Warranty expiry must be on or after the purchase date.");
-    commit(
-      existing ? "Asset updated" : "Asset registered",
-      cleaned.tag,
-      (draft) => {
-        if (existing)
-          draft.assets[draft.assets.findIndex((item) => item.id === id)] =
-            cleaned;
-        else draft.assets.unshift(cleaned);
-      },
-    );
-    onClose();
+      onClose();
   }
   return (
     <Modal
@@ -167,7 +145,6 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
           </Field>
           <Field label="Serial number">
             <input
-              required
               maxLength={80}
               value={asset.serial}
               onChange={(event) => update("serial", event.target.value)}
@@ -220,7 +197,6 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
           <Field label="Purchase date">
             <input
               type="date"
-              required
               value={asset.purchased}
               onChange={(event) => update("purchased", event.target.value)}
             />
@@ -237,9 +213,13 @@ function AssetForm({ id, onClose }: { id?: string; onClose: () => void }) {
               type="number"
               min="0"
               step="0.01"
-              required
-              value={asset.cost}
-              onChange={(event) => update("cost", Number(event.target.value))}
+              value={asset.cost ?? ""}
+              onChange={(event) =>
+                update(
+                  "cost",
+                  event.target.value ? Number(event.target.value) : null,
+                )
+              }
             />
           </Field>
           <p className="field-note full">
@@ -266,7 +246,7 @@ function AssetDetail({
   onClose: () => void;
   onOpen: (dialog: AssetDialog) => void;
 }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const asset = state.assets.find((item) => item.id === id)!;
   const person = state.people.find((item) => item.id === asset.personId);
   const location = state.locations.find((item) => item.id === asset.locationId);
@@ -378,18 +358,21 @@ function AssetDetail({
             <div className="retire-section">
               {retiring ? (
                 <form
-                  onSubmit={(event) => {
+                  onSubmit={async (event) => {
                     event.preventDefault();
                     if (!reason.trim()) return;
-                    commit(
-                      "Asset retired",
-                      `${asset.tag} · ${reason.trim()}`,
-                      (draft) => {
-                        draft.assets.find((item) => item.id === id)!.status =
-                          "Retired";
-                      },
-                    );
-                    onClose();
+                    if (
+                      await command(
+                        "retire_asset",
+                        {
+                          asset_id: asset.id,
+                          asset_version: asset.version || 1,
+                          note: reason.trim(),
+                        },
+                        "Asset retired",
+                      )
+                    )
+                      onClose();
                   }}
                 >
                   <Field label="Retirement reason">
@@ -482,7 +465,7 @@ function AssetDetail({
 }
 
 function ImportAssets({ onClose }: { onClose: () => void }) {
-  const { state, commit } = useInventory();
+  const { state, command } = useInventory();
   const [rows, setRows] = useState<Asset[]>([]);
   const [error, setError] = useState("");
   async function read(file?: File) {
@@ -599,15 +582,15 @@ function ImportAssets({ onClose }: { onClose: () => void }) {
         <button
           className="button primary"
           disabled={!rows.length || Boolean(error)}
-          onClick={() => {
-            commit(
-              "Assets imported",
-              `${rows.length} assets from CSV`,
-              (draft) => {
-                draft.assets.unshift(...rows);
-              },
-            );
-            onClose();
+          onClick={async () => {
+            if (
+              await command(
+                "import_assets",
+                { assets: rows.map(assetPayload) },
+                "Assets imported",
+              )
+            )
+              onClose();
           }}
         >
           Import {rows.length || ""} assets
