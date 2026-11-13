@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { DatabaseStatus } from "./components/DatabaseStatus";
+import { ThemeToggle } from "./components/ThemeToggle";
 import {
   Activity as ActivityIcon,
   ArrowRight,
@@ -274,6 +276,8 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
               <strong>{titles[page]}</strong>
             </div>
             <div className="topbar-actions">
+              <DatabaseStatus />
+              <ThemeToggle />
               <form
                 className="global-search"
                 onSubmit={(event) => {
@@ -355,25 +359,6 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
           </header>
-          <div className="preview-banner">
-            <span>
-              <i />
-              Connected to Supabase
-              <span className="preview-detail">
-                Inventory shared with the IT department
-              </span>
-            </span>
-            <button
-              disabled={saving}
-              onClick={() => void refresh().catch(() => {})}
-            >
-              Reload inventory
-            </button>
-            <button onClick={() => setHelp(true)}>
-              About this workspace
-              <ChevronRight size={13} />
-            </button>
-          </div>
           {storageError && (
             <p className="storage-error" role="alert">
               {storageError}

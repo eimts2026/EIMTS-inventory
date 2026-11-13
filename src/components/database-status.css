@@ -1,0 +1,21 @@
+.db-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font: 600 12px/1.4 Inter, sans-serif;
+  color: #475569;
+  background: #f1f5f9;
+}
+.db-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.db-status[data-status="Live"] { color: #086041; background: #dcf8e9; }
+.db-status[data-status="Live"]::before { background: #12a86b; box-shadow: 0 0 5px #18bc7780; }
+@media (prefers-reduced-motion: no-preference) {
+  .db-status[data-status="Live"] { animation: live-breathe 3.6s ease-in-out infinite; }
+  @keyframes live-breathe {
+    0%, 100% { box-shadow: 0 0 3px 0 #10b98125; }
+    50% { box-shadow: 0 0 11px 2px #10b98160; }
+  }
+}
+.db-status:is([data-status="Offline"], [data-status="Unavailable"]) { color: #8b4211; background: #fff1da; }
