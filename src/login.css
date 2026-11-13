@@ -1,0 +1,248 @@
+/* Matches the EIMTS dashboard's centred emerald sign-in, using local Inter. */
+.inventory-auth {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 48px 20px;
+  isolation: isolate;
+  background: #07100c;
+  color: #edf5ef;
+}
+.inventory-auth::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #a7dbb85c 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  opacity: 0.42;
+}
+.inventory-auth-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, #0d251a66, #07100cd6 75%);
+}
+.inventory-auth-card {
+  width: min(450px, 100%);
+  padding: clamp(28px, 6vw, 42px);
+  border: 1px solid #ffffff1f;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #0e1b15f5, #09130ef7);
+  box-shadow:
+    inset 0 1px #ffffff12,
+    0 35px 80px -25px #000b;
+  text-align: center;
+  animation: inventory-auth-enter 300ms ease-out;
+}
+.inventory-auth-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 14px;
+  color: #052b1a;
+  background: linear-gradient(#2bd58d, #12a466);
+  box-shadow:
+    inset 0 1px #ffffff55,
+    0 8px 24px -6px #21bd7559;
+  font-size: 17px;
+  font-weight: 700;
+}
+.inventory-auth-product {
+  display: block;
+  margin-bottom: 17px;
+  color: #b5c9bc;
+  font-size: 14px;
+  font-weight: 500;
+}
+.inventory-auth h1 {
+  margin: 0 0 10px;
+  color: #f1f6f3;
+  font-size: clamp(25px, 5vw, 29px);
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+  font-weight: 600;
+}
+.inventory-auth-sub {
+  margin: 0 auto 27px;
+  color: #abc0b2;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.inventory-auth-form {
+  display: grid;
+  gap: 18px;
+  text-align: left;
+}
+.inventory-auth-form > label {
+  display: grid;
+  gap: 8px;
+  color: #d5e2da;
+  font-size: 14px;
+  font-weight: 500;
+}
+.inventory-auth-input {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid #ffffff24;
+  border-radius: 12px;
+  color: #90a89b;
+  background: #050e0a;
+  transition:
+    border-color 180ms,
+    box-shadow 180ms;
+}
+.inventory-auth-input:focus-within {
+  border-color: #29c282;
+  box-shadow: 0 0 0 3px #29c2821a;
+}
+.inventory-auth-input > svg {
+  flex-shrink: 0;
+}
+.inventory-auth-input input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 0;
+  border: 0;
+  outline: none;
+  border-radius: 0;
+  background: transparent;
+  color: #edf5ef;
+  font-size: 16px;
+  font-weight: 400;
+  box-shadow: none;
+}
+.inventory-auth-input input::placeholder {
+  color: #8ba494;
+}
+.inventory-auth-input input:focus {
+  outline: none;
+  box-shadow: none;
+}
+.inventory-auth-input input:-webkit-autofill {
+  -webkit-text-fill-color: #edf5ef;
+  -webkit-box-shadow: 0 0 0 1000px #050e0a inset;
+  caret-color: #edf5ef;
+}
+.inventory-auth-eye {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  color: #abc0b2;
+  border-radius: 8px;
+}
+.inventory-auth-eye:hover {
+  color: white;
+  background: #ffffff0c;
+}
+.inventory-auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  width: 100%;
+  margin-top: 3px;
+  border: 1px solid #2bd58d;
+  border-radius: 12px;
+  background: linear-gradient(#2bd58d, #16b574);
+  color: #032416;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: inset 0 1px #ffffff3b;
+  transition:
+    filter 180ms,
+    transform 180ms;
+}
+.inventory-auth-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.inventory-auth-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.inventory-auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.inventory-auth button:focus-visible {
+  outline: 2px solid #80efb6;
+  outline-offset: 4px;
+}
+.inventory-auth-feedback {
+  min-height: 0;
+  margin: -6px 0 0;
+  color: #ffbfae;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.inventory-auth-feedback:empty {
+  display: none;
+}
+.inventory-auth-message {
+  margin: 0;
+  color: #b5ddc6;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.inventory-auth-links {
+  margin-top: 23px;
+  color: #a6bcaf;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.inventory-auth-links button {
+  min-height: 44px;
+  color: #ecf5ef;
+  font-weight: 600;
+}
+.inventory-auth-links button:hover {
+  color: #4ce59b;
+}
+.inventory-auth-footnote {
+  margin: 24px 0 0;
+  padding-top: 21px;
+  border-top: 1px solid #ffffff14;
+  color: #99b1a1;
+  font-size: 13px;
+  line-height: 1.7;
+}
+@keyframes inventory-auth-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inventory-auth-card {
+    animation: none;
+  }
+  .inventory-auth * {
+    transition: none;
+  }
+}
+@media (max-width: 480px) {
+  .inventory-auth {
+    padding: 26px 16px;
+  }
+  .inventory-auth-card {
+    padding: 30px 24px;
+    border-radius: 19px;
+  }
+}
