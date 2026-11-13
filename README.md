@@ -21,7 +21,6 @@ Open the local URL printed by Vite. Run `npm run build` for a production build a
 - Location audits with an expected inventory snapshot, camera or manual tag lookup, serial confirmation, observed condition, and verifier history.
 - Discrepancy ownership, due dates, resolution notes, and explicit confirmation before applying an observed location to the register.
 - Repair tracking with service references, costs, and return to IT stock.
-- Consumable receipts and issues, stock history, and reorder thresholds.
 - Employee and location records, six printable/exportable reports, and activity history.
 - Workspace defaults, enforced IT access, and inventory export.
 
@@ -37,7 +36,7 @@ Inventory reads and writes now use Supabase. Browser preview records are never l
 
 Supabase project `kmfuzygltjwhjwmwebbd` implements IT authorization, directory records, assets, transactional custody, physical audit snapshots, observations, discrepancies, paper references, and database activity history. See [backend implementation](supabase/README.md) for SQL, commands, verification, and remaining work.
 
-Maintenance and consumable screens identify their pending database integration. Reports for the connected modules read the current server snapshot. Activity displays the most recent 1,000 database events. IT access and settings are enforced by database role checks.
+Maintenance is connected to Supabase with fault logging, service providers, due dates, paper references, costs and checked completion. Consumables have been removed from the app. Reports for the connected modules read the current server snapshot. Activity displays the most recent 1,000 database events. IT access and settings are enforced by database role checks.
 
 ## Supabase configuration
 

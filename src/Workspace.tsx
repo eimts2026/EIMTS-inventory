@@ -12,7 +12,6 @@ import {
   HelpCircle,
   LayoutDashboard,
   Menu,
-  PackageOpen,
   Search,
   Settings as SettingsIcon,
   ShieldCheck,
@@ -25,13 +24,13 @@ import { InventoryProvider, useInventory } from "./store";
 import { verificationDue } from "./model";
 import { AssetDialogs } from "./components/AssetDialogs";
 import type { AssetDialog } from "./components/AssetDialogs";
-import { Modal, PageHeading, Empty } from "./components/ui";
+import { Modal } from "./components/ui";
 import { useAuth } from "./auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Assets } from "./pages/Assets";
 import { Custody } from "./pages/Custody";
 import { Verification } from "./pages/Verification";
-import { Issues } from "./pages/Operations";
+import { Issues, Maintenance } from "./pages/Operations";
 import { Organisation } from "./pages/Organisation";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
@@ -52,7 +51,6 @@ const navigation = [
     links: [
       { id: "issues", name: "Discrepancies", icon: CircleAlert },
       { id: "maintenance", name: "Maintenance", icon: Wrench },
-      { id: "consumables", name: "Consumables", icon: PackageOpen },
     ],
   },
   {
@@ -402,30 +400,7 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
             {page === "custody" && <Custody onOpen={onOpen} />}
             {page === "verification" && <Verification onOpen={onOpen} />}
             {page === "issues" && <Issues onOpen={onOpen} />}
-            {page === "maintenance" && (
-              <>
-                <PageHeading
-                  title="Maintenance"
-                  description="Service history and repair outcomes."
-                />
-                <Empty
-                  title="Database integration pending"
-                  description="Repair tracking will be connected in the next backend milestone."
-                />
-              </>
-            )}
-            {page === "consumables" && (
-              <>
-                <PageHeading
-                  title="Consumables"
-                  description="Stock receipts, issues, and reorder levels."
-                />
-                <Empty
-                  title="Database integration pending"
-                  description="Stock movements will be connected in the next backend milestone."
-                />
-              </>
-            )}
+            {page === "maintenance" && <Maintenance onOpen={onOpen} />}
             {page === "organisation" && <Organisation />}
             {page === "reports" && (
               <Reports initialReport={parameters.get("report") || "custody"} />
@@ -466,15 +441,13 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
               </p>
               <p>
                 <CircleAlert size={19} />
-                <span>
-                  Resolve discrepancies and follow maintenance and stock.
-                </span>
+                <span>Resolve discrepancies and follow maintenance.</span>
               </p>
             </div>
             <div className="info-note">
-              IT access is checked against active membership. Maintenance,
-              consumable stock, MFA, and database backup operations follow in
-              later milestones.
+              IT access is checked against active membership. Repair tracking is
+              connected to Supabase. MFA and database backup operations follow
+              in later milestones.
             </div>
             <p>
               Paper forms are tracked by reference number and filing location.

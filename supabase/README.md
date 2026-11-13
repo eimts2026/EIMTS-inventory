@@ -60,7 +60,7 @@ Row versions reject stale edits with SQLSTATE `40001`. Validation errors use `22
 
 ## Remaining approved work
 
-Maintenance, consumable movements, additional database reports, MFA, and database backup/restore operations follow in later milestones. Password-recovery email delivery and redirect configuration need verification against the deployment's Auth settings. Leaked-password protection remains disabled in the project. Real inventory will be normalized and validated in a dry run when the source data is supplied. No real inventory import has run.
+Additional database reports, MFA, and database backup/restore operations follow in later milestones. Password-recovery email delivery and redirect configuration need verification against the deployment's Auth settings. Leaked-password protection remains disabled in the project. Real inventory will be normalized and validated in a dry run when the source data is supplied. No real inventory import has run.
 
 ## Physical verification commands
 
@@ -73,3 +73,5 @@ Maintenance, consumable movements, additional database reports, MFA, and databas
 `inventory_snapshot` returns one consistent server snapshot for the existing dashboard, forms, reports, and exports. Its activity history is limited to the newest 1,000 entries. Full audit and custody records remain in their own tables.
 
 `tests/verification.sql` passed checks for frozen known and unknown serials, serial mismatches, damage, retries, missing assets on closure, repeated closure, resolution conflicts, and evidence protection. Browser checks also passed directory creation, asset registration with unknown purchase cost/date, audit creation, physical observation, automatic discrepancy creation, and resolution. Temporary browser-test inventory was removed afterward.
+
+Maintenance uses public.repairs and the open_repair / complete_repair inventory commands. Asset locks, versions and one-open-repair indexing protect custody. Successful completion returns a checked device to Available / Good. Paper service references remain physical.

@@ -64,6 +64,21 @@ const item = z.object({
   expected_condition: condition,
 });
 const snapshotSchema = z.object({
+  repairs: z.array(
+    z.object({
+      id: text,
+      asset_id: text,
+      problem: text,
+      vendor: text,
+      opened_at: text,
+      due_on: text,
+      closed_at: nullable,
+      cost: z.number(),
+      paper_reference: text,
+      resolution: text,
+      version,
+    }),
+  ),
   members: z.array(member),
   branches: z.array(
     z.object({ id: text, name: text, active: z.boolean(), version }),
@@ -295,6 +310,19 @@ export async function loadInventory(
     action: `${e.entity_type} ${e.action.toLowerCase()}`,
     subject: e.entity_id || "Workspace",
     officer: name(e.actor_id),
+  }));
+  state.repairs = raw.repairs.map((r) => ({
+    id: r.id,
+    assetId: r.asset_id,
+    problem: r.problem,
+    vendor: r.vendor,
+    openedAt: r.opened_at,
+    dueAt: r.due_on,
+    closedAt: r.closed_at || "",
+    cost: r.cost,
+    reference: r.paper_reference,
+    resolution: r.resolution,
+    version: r.version,
   }));
   state.settings = {
     organisation: raw.settings.organisation,

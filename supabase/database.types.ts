@@ -45,15 +45,7 @@ export type Database = {
           id?: string;
           occurred_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "activity_log_actor_id_fkey";
-            columns: ["actor_id"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-        ];
+        Relationships: [];
       };
       assets: {
         Row: {
@@ -120,13 +112,6 @@ export type Database = {
           warranty_until?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "assets_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
           {
             foreignKeyName: "assets_location_id_fkey";
             columns: ["location_id"];
@@ -237,20 +222,6 @@ export type Database = {
           version?: number;
         };
         Relationships: [
-          {
-            foreignKeyName: "audits_closed_by_fkey";
-            columns: ["closed_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "audits_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
           {
             foreignKeyName: "audits_location_id_fkey";
             columns: ["location_id"];
@@ -368,13 +339,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "discrepancies_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-          {
             foreignKeyName: "discrepancies_expected_location_id_fkey";
             columns: ["expected_location_id"];
             isOneToOne: false;
@@ -387,20 +351,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "discrepancies_owner_id_fkey";
-            columns: ["owner_id"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "discrepancies_resolved_by_fkey";
-            columns: ["resolved_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
           },
         ];
       };
@@ -493,20 +443,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "handovers_closed_by_fkey";
-            columns: ["closed_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "handovers_issued_by_fkey";
-            columns: ["issued_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
-          {
             foreignKeyName: "handovers_location_id_fkey";
             columns: ["location_id"];
             isOneToOne: false;
@@ -526,13 +462,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "handovers_signed_received_by_fkey";
-            columns: ["signed_received_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
           },
         ];
       };
@@ -664,13 +593,6 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "observations_verified_by_fkey";
-            columns: ["verified_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
         ];
       };
       people: {
@@ -713,6 +635,69 @@ export type Database = {
             columns: ["location_id"];
             isOneToOne: false;
             referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      repairs: {
+        Row: {
+          asset_id: string;
+          closed_at: string | null;
+          closed_by: string | null;
+          cost: number;
+          due_on: string;
+          id: string;
+          opened_at: string;
+          opened_by: string;
+          paper_reference: string;
+          problem: string;
+          resolution: string;
+          vendor: string;
+          version: number;
+        };
+        Insert: {
+          asset_id: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          cost?: number;
+          due_on: string;
+          id?: string;
+          opened_at?: string;
+          opened_by: string;
+          paper_reference?: string;
+          problem: string;
+          resolution?: string;
+          vendor: string;
+          version?: number;
+        };
+        Update: {
+          asset_id?: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          cost?: number;
+          due_on?: string;
+          id?: string;
+          opened_at?: string;
+          opened_by?: string;
+          paper_reference?: string;
+          problem?: string;
+          resolution?: string;
+          vendor?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "repairs_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "asset_register";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "repairs_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
             referencedColumns: ["id"];
           },
         ];
@@ -772,13 +757,6 @@ export type Database = {
           warranty_until: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "assets_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "it_members";
-            referencedColumns: ["user_id"];
-          },
           {
             foreignKeyName: "assets_location_id_fkey";
             columns: ["location_id"];

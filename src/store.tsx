@@ -18,12 +18,6 @@ interface Store {
   command: (action: string, payload: Json, message: string) => Promise<boolean>;
   saving: boolean;
   refresh: () => Promise<void>;
-  // Older maintenance/stock forms stay unavailable until their database milestone.
-  commit: (
-    action: string,
-    subject: string,
-    mutate: (draft: InventoryState) => void,
-  ) => void;
   notify: (message: string) => void;
   notice: string;
   storageError: string;
@@ -136,8 +130,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         notice,
         storageError,
         notify: setNotice,
-        commit: () =>
-          setError("This module is awaiting its database integration."),
       }}
     >
       {children}

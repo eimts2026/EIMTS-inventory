@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Check, CircleAlert, Plus, Wrench } from "lucide-react";
 import type { Issue, Repair } from "../model";
-import { currency, dateLabel, now, relativeDay, today, uid } from "../model";
+import { currency, dateLabel, relativeDay, today } from "../model";
 import { useInventory } from "../store";
 import {
   Badge,
@@ -384,7 +384,7 @@ export function Maintenance({
 }: {
   onOpen: (dialog: AssetDialog) => void;
 }) {
-  const { state, commit } = useInventory();
+  const { state, command, saving } = useInventory();
   const [creating, setCreating] = useState(false);
   const [closing, setClosing] = useState<Repair | null>(null);
   const [tab, setTab] = useState("In progress");
@@ -402,60 +402,53 @@ export function Maintenance({
   const filtered = state.repairs.filter((repair) =>
     tab === "Completed" ? Boolean(repair.closedAt) : !repair.closedAt,
   );
-  function create(event: FormEvent) {
+  async function create(event: FormEvent) {
     event.preventDefault();
     const asset = state.assets.find((item) => item.id === assetId);
+    if (!asset) return setError("Choose an asset in IT stock.");
+    setError("");
     if (
-      !asset ||
-      (asset.status !== "Available" && asset.status !== "Needs service")
-    )
-      return setError(
-        "Choose an asset in IT stock. Record a return first for an assigned device.",
-      );
-    if (!problem.trim() || !vendor.trim())
-      return setError("Enter the fault and service provider.");
-    const repair: Repair = {
-      id: uid(),
-      assetId,
-      problem: problem.trim(),
-      vendor: vendor.trim(),
-      dueAt,
-      reference: reference.trim(),
-      openedAt: now(),
-      closedAt: "",
-      cost: 0,
-      resolution: "",
-    };
-    commit(
-      "Maintenance opened",
-      `${asset.tag} · ${problem.trim()}`,
-      (draft) => {
-        draft.repairs.unshift(repair);
-        draft.assets.find((item) => item.id === assetId)!.status = "In repair";
-      },
-    );
-    setCreating(false);
-    setProblem("");
-    setReference("");
+      await command(
+        "open_repair",
+        {
+          asset_id: asset.id,
+          asset_version: asset.version!,
+          problem: problem.trim(),
+          vendor: vendor.trim(),
+          due_on: dueAt,
+          paper_reference: reference.trim(),
+        },
+        "Maintenance opened",
+      )
+    ) {
+      setCreating(false);
+      setProblem("");
+      setReference("");
+    }
   }
-  function finish(event: FormEvent) {
+  async function finish(event: FormEvent) {
     event.preventDefault();
     if (!closing || !resolution.trim())
       return setError("Record the repair outcome.");
-    commit(
-      "Maintenance completed",
-      `${state.assets.find((asset) => asset.id === closing.assetId)?.tag} · ${resolution.trim()}`,
-      (draft) => {
-        const repair = draft.repairs.find((item) => item.id === closing.id)!;
-        repair.closedAt = now();
-        repair.cost = cost;
-        repair.resolution = resolution.trim();
-        const asset = draft.assets.find((item) => item.id === closing.assetId)!;
-        asset.status = "Available";
-        asset.condition = "Good";
-      },
-    );
-    setClosing(null);
+    const asset = state.assets.find((item) => item.id === closing.assetId);
+    if (!asset) return setError("Reload the asset before continuing.");
+    setError("");
+    if (
+      await command(
+        "complete_repair",
+        {
+          asset_id: asset.id,
+          asset_version: asset.version!,
+          repair_id: closing.id,
+          version: closing.version!,
+          cost,
+          resolution: resolution.trim(),
+          ready_for_stock: true,
+        },
+        "Maintenance completed",
+      )
+    )
+      setClosing(null);
   }
   return (
     <>
@@ -610,59 +603,64 @@ export function Maintenance({
           onClose={() => setCreating(false)}
         >
           <form onSubmit={create}>
-            <div className="form-grid">
-              <Field label="Asset in IT stock" full>
-                <Select
-                  required
-                  value={assetId}
-                  onValueChange={(event) => setAssetId(event)}
-                >
-                  <option value="">Choose a device</option>
-                  {eligible.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.tag} / {asset.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Fault description" full>
-                <input
-                  required
-                  maxLength={200}
-                  value={problem}
-                  onChange={(event) => setProblem(event.target.value)}
-                />
-              </Field>
-              <Field label="Service provider">
-                <input
-                  required
-                  maxLength={100}
-                  value={vendor}
-                  onChange={(event) => setVendor(event.target.value)}
-                />
-              </Field>
-              <Field label="Expected completion">
-                <input
-                  required
-                  type="date"
-                  min={today()}
-                  value={dueAt}
-                  onChange={(event) => setDueAt(event.target.value)}
-                />
-              </Field>
-              <Field label="Paper service reference" full>
-                <input
-                  maxLength={80}
-                  value={reference}
-                  onChange={(event) => setReference(event.target.value)}
-                />
-              </Field>
-            </div>
-            <ErrorMessage error={error} />
-            <FormActions
-              onClose={() => setCreating(false)}
-              label="Log repair"
-            />
+            <fieldset
+              disabled={saving}
+              style={{ border: 0, padding: 0, margin: 0 }}
+            >
+              <div className="form-grid">
+                <Field label="Asset in IT stock" full>
+                  <Select
+                    required
+                    value={assetId}
+                    onValueChange={(event) => setAssetId(event)}
+                  >
+                    <option value="">Choose a device</option>
+                    {eligible.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.tag} / {asset.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Fault description" full>
+                  <input
+                    required
+                    maxLength={200}
+                    value={problem}
+                    onChange={(event) => setProblem(event.target.value)}
+                  />
+                </Field>
+                <Field label="Service provider">
+                  <input
+                    required
+                    maxLength={100}
+                    value={vendor}
+                    onChange={(event) => setVendor(event.target.value)}
+                  />
+                </Field>
+                <Field label="Expected completion">
+                  <input
+                    required
+                    type="date"
+                    min={today()}
+                    value={dueAt}
+                    onChange={(event) => setDueAt(event.target.value)}
+                  />
+                </Field>
+                <Field label="Paper service reference" full>
+                  <input
+                    maxLength={80}
+                    value={reference}
+                    onChange={(event) => setReference(event.target.value)}
+                  />
+                </Field>
+              </div>
+              <ErrorMessage error={error} />
+              <FormActions
+                onClose={() => setCreating(false)}
+                label="Log repair"
+              />
+            </fieldset>
           </form>
         </Modal>
       )}
@@ -673,35 +671,40 @@ export function Maintenance({
           onClose={() => setClosing(null)}
         >
           <form onSubmit={finish}>
-            <div className="form-grid">
-              <Field label="Repair outcome" full>
-                <textarea
-                  required
-                  maxLength={500}
-                  value={resolution}
-                  onChange={(event) => setResolution(event.target.value)}
-                />
-              </Field>
-              <Field label="Repair cost (LKR)" full>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={cost}
-                  onChange={(event) => setCost(Number(event.target.value))}
-                />
-              </Field>
-              <label className="checkbox-field full">
-                <input type="checkbox" required />
-                Device checked and ready for IT stock
-              </label>
-            </div>
-            <ErrorMessage error={error} />
-            <FormActions
-              onClose={() => setClosing(null)}
-              label="Complete repair"
-            />
+            <fieldset
+              disabled={saving}
+              style={{ border: 0, padding: 0, margin: 0 }}
+            >
+              <div className="form-grid">
+                <Field label="Repair outcome" full>
+                  <textarea
+                    required
+                    maxLength={500}
+                    value={resolution}
+                    onChange={(event) => setResolution(event.target.value)}
+                  />
+                </Field>
+                <Field label="Repair cost (LKR)" full>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={cost}
+                    onChange={(event) => setCost(Number(event.target.value))}
+                  />
+                </Field>
+                <label className="checkbox-field full">
+                  <input type="checkbox" required />
+                  Device checked and ready for IT stock
+                </label>
+              </div>
+              <ErrorMessage error={error} />
+              <FormActions
+                onClose={() => setClosing(null)}
+                label="Complete repair"
+              />
+            </fieldset>
           </form>
         </Modal>
       )}

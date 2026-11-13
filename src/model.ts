@@ -93,6 +93,7 @@ export interface Issue {
   resolvedAt: string;
 }
 export interface Repair {
+  version?: number;
   id: string;
   assetId: string;
   problem: string;
